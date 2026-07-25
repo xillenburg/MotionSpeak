@@ -1,189 +1,288 @@
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Dimensions,
+  View, Text, StyleSheet, ScrollView,
+  TouchableOpacity, StatusBar, Platform, Image
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Colors } from '../constants/colors';
-import { FSL_SIGNS, SIGN_CATEGORIES } from '../constants/signs';
+import { useTheme } from '../constants/theme';
 import { useAppStore } from '../store/useAppStore';
+import { FSL_SIGNS, SIGN_CATEGORIES } from '../constants/signs';
 
-const { width } = Dimensions.get('window');
-
-interface Props {
-  navigation: any;
-}
+interface Props { navigation: any; }
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors, fs } = useTheme();
   const { translationHistory } = useAppStore();
 
-  const stats = [
-    { label: 'Signs', value: FSL_SIGNS.length, icon: 'hand-wave', color: Colors.primary },
-    { label: 'Categories', value: SIGN_CATEGORIES.length, icon: 'tag-multiple', color: Colors.warning },
-    { label: 'Translated', value: translationHistory.length, icon: 'translate', color: Colors.success },
-  ];
+  const recentHistory = translationHistory.slice(0, 3);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar
+        barStyle={colors.textPrimary === '#0F172A' ? 'dark-content' : 'light-content'}
+        backgroundColor={colors.surface}
+      />
 
-        {/* Top Banner */}
-        <LinearGradient
-          colors={[Colors.primary + '25', Colors.background]}
-          style={styles.banner}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+      {/* Header */}
+      <View style={[
+        styles.header,
+        {
+          backgroundColor: colors.surface,
+          borderBottomColor: colors.border,
+          paddingTop: insets.top + 12,
+        },
+      ]}>
+        <View>
+          <Text style={[styles.headerGreeting, { color: colors.textSecondary, fontSize: fs(13) }]}>
+            Good day 👋
+          </Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary, fontSize: fs(22) }]}>
+            MotionSpeak
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={[styles.aboutBtn, { backgroundColor: colors.primaryLight }]}
+          onPress={() => navigation.navigate('About')}
         >
-          <View style={styles.bannerContent}>
-            <View>
-              <Text style={styles.bannerTitle}>MotionSpeak</Text>
-              <Text style={styles.bannerSub}>Filipino Sign Language Interpreter</Text>
-              <View style={styles.bannerBadge}>
-                <Icon name="hospital-box" size={12} color={Colors.primary} />
-                <Text style={styles.bannerBadgeText}> Healthcare Edition</Text>
-              </View>
+          <Icon name="information-outline" size={20} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scroll, { paddingBottom: 32 }]}
+      >
+{/* Hero Card */}
+        <TouchableOpacity
+          style={[styles.heroCard, { backgroundColor: colors.primary }]}
+          onPress={() => navigation.navigate('Camera')}
+          activeOpacity={0.9}
+        >
+          <View style={styles.heroLeft}>
+            <Text style={[styles.heroLabel, { fontSize: fs(12) }]}>LIVE TRANSLATION</Text>
+            <Text style={[styles.heroTitle, { fontSize: fs(22) }]}>
+              Start Signing
+            </Text>
+            <Text style={[styles.heroSub, { fontSize: fs(13) }]}>
+              Point camera at signer to begin
+            </Text>
+            <View style={styles.heroBtn}>
+              <Text style={[styles.heroBtnText, { fontSize: fs(13) }]}>Open Camera</Text>
+              <Icon name="arrow-right" size={14} color="#fff" />
             </View>
-            <Text style={styles.bannerEmoji}>🤟</Text>
           </View>
-        </LinearGradient>
+          <Image
+            source={require('../assets/hand_ms.png')}
+            style={styles.heroLogo}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
 
         {/* Stats Row */}
         <View style={styles.statsRow}>
-          {stats.map(s => (
-            <View key={s.label} style={styles.statCard}>
-              <Icon name={s.icon} size={22} color={s.color} />
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
+          {[
+            { icon: 'hand-wave-outline', label: 'Signs', value: FSL_SIGNS.length, color: colors.primary },
+            { icon: 'tag-multiple-outline', label: 'Categories', value: SIGN_CATEGORIES.length, color: colors.warning },
+            { icon: 'history', label: 'Translated', value: translationHistory.length, color: colors.success },
+          ].map(stat => (
+            <View
+              key={stat.label}
+              style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+            >
+              <Icon name={stat.icon} size={20} color={stat.color} />
+              <Text style={[styles.statValue, { color: colors.textPrimary, fontSize: fs(20) }]}>
+                {stat.value}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary, fontSize: fs(11) }]}>
+                {stat.label}
+              </Text>
             </View>
           ))}
         </View>
-
-        {/* Main CTA — Start Translating */}
-        <TouchableOpacity
-          style={styles.ctaButton}
-          onPress={() => navigation.navigate('Camera')}
-          activeOpacity={0.85}
-        >
-          <LinearGradient
-            colors={[Colors.primary, Colors.primaryDark]}
-            style={styles.ctaGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Icon name="camera" size={24} color="#fff" />
-            <View style={styles.ctaTextBlock}>
-              <Text style={styles.ctaTitle}>Start Translating</Text>
-              <Text style={styles.ctaSub}>Open camera for live FSL recognition</Text>
-            </View>
-            <Icon name="chevron-right" size={20} color="#ffffff80" />
-          </LinearGradient>
-        </TouchableOpacity>
 
         {/* Quick Actions */}
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.quickGrid}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary, fontSize: fs(12) }]}>
+          QUICK ACTIONS
+        </Text>
+        <View style={[styles.actionsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {[
-            { icon: 'book-open-variant', label: 'Sign Dictionary', sub: '60 medical signs', color: Colors.info, screen: 'Dictionary' },
-            { icon: 'history', label: 'History', sub: `${translationHistory.length} recent`, color: Colors.warning, screen: 'History' },
-            { icon: 'cog', label: 'Settings', sub: 'Configure app', color: Colors.textSecondary, screen: 'Settings' },
-            { icon: 'information', label: 'About', sub: 'MotionSpeak info', color: '#BC8CFF', screen: 'About' },
-          ].map(item => (
-            <TouchableOpacity
-              key={item.label}
-              style={styles.quickCard}
-              onPress={() => navigation.navigate(item.screen)}
-              activeOpacity={0.75}
-            >
-              <View style={[styles.quickIcon, { backgroundColor: item.color + '20' }]}>
-                <Icon name={item.icon} size={22} color={item.color} />
-              </View>
-              <Text style={styles.quickLabel}>{item.label}</Text>
-              <Text style={styles.quickSub}>{item.sub}</Text>
-            </TouchableOpacity>
+            {
+              icon: 'book-open-outline',
+              label: 'Sign Dictionary',
+              sub: `${FSL_SIGNS.length} medical FSL signs`,
+              color: colors.primary,
+              action: () => navigation.navigate('Dictionary'),
+            },
+            {
+              icon: 'hospital-box-outline',
+              label: 'MediSIGN Reference',
+              sub: 'Based on UP Manila handbook',
+              color: colors.success,
+              action: () => navigation.navigate('Dictionary'),
+            },
+            {
+              icon: 'cog-outline',
+              label: 'App Settings',
+              sub: 'Font, language, TTS & more',
+              color: colors.warning,
+              action: () => navigation.navigate('Settings'),
+            },
+          ].map((item, index, arr) => (
+            <React.Fragment key={item.label}>
+              <TouchableOpacity
+                style={styles.actionRow}
+                onPress={item.action}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.actionIcon, { backgroundColor: item.color + '15' }]}>
+                  <Icon name={item.icon} size={20} color={item.color} />
+                </View>
+                <View style={styles.actionText}>
+                  <Text style={[styles.actionLabel, { color: colors.textPrimary, fontSize: fs(15) }]}>
+                    {item.label}
+                  </Text>
+                  <Text style={[styles.actionSub, { color: colors.textSecondary, fontSize: fs(12) }]}>
+                    {item.sub}
+                  </Text>
+                </View>
+                <Icon name="chevron-right" size={18} color={colors.textMuted} />
+              </TouchableOpacity>
+              {index < arr.length - 1 && (
+                <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+              )}
+            </React.Fragment>
           ))}
         </View>
 
-        {/* Recent Translation */}
-        {translationHistory.length > 0 && (
+        {/* Recent Translations */}
+        {recentHistory.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Last Translation</Text>
-            <View style={styles.lastTranslation}>
-              <Icon name="translate" size={18} color={Colors.primary} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.lastLabel}>{translationHistory[0].label}</Text>
-                <Text style={styles.lastFil}>{translationHistory[0].labelFil}</Text>
-              </View>
-              <Text style={styles.lastConf}>
-                {Math.round(translationHistory[0].confidence * 100)}%
-              </Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary, fontSize: fs(12) }]}>
+              RECENT TRANSLATIONS
+            </Text>
+            <View style={[styles.actionsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              {recentHistory.map((item, index) => (
+              <React.Fragment key={item.timestamp}>
+                <View style={styles.historyRow}>
+                  <View style={[styles.historyDot, { backgroundColor: colors.primaryLight }]}>
+                    <Icon name="translate" size={14} color={colors.primary} />
+                  </View>
+                  <View style={styles.actionText}>
+                    <Text style={[styles.actionLabel, { color: colors.textPrimary, fontSize: fs(15) }]}>
+                      {item.label}
+                    </Text>
+                    <Text style={[styles.actionSub, { color: colors.textSecondary, fontSize: fs(12) }]}>
+                      {item.labelFil}
+                    </Text>
+                  </View>
+                </View>
+                {index < recentHistory.length - 1 && (
+                  <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+                )}
+              </React.Fragment>
+            ))}
             </View>
           </>
         )}
-
-        <View style={{ height: 40 }} />
       </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  scroll: { paddingHorizontal: 16, paddingTop: 16 },
-  banner: {
-    borderRadius: 16, padding: 20, marginBottom: 16,
-    borderWidth: 1, borderColor: Colors.primary + '30',
+  container: { flex: 1 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
   },
-  bannerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  bannerTitle: { fontSize: 22, fontWeight: '800', color: Colors.textPrimary },
-  bannerSub: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-  bannerBadge: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.primary + '20', borderRadius: 20,
-    paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start', marginTop: 8,
+  headerGreeting: { fontWeight: '400', marginBottom: 2 },
+  headerTitle: { fontWeight: '700', letterSpacing: -0.3 },
+  aboutBtn: {
+    width: 38, height: 38, borderRadius: 19,
+    alignItems: 'center', justifyContent: 'center',
   },
-  bannerBadgeText: { fontSize: 11, color: Colors.primary, fontWeight: '600' },
-  bannerEmoji: { fontSize: 52 },
-  statsRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+  scroll: { padding: 20, gap: 16 },
+  heroCard: {
+    borderRadius: 16,
+    padding: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  heroLeft: { flex: 1, gap: 6 },
+  heroLabel: { color: '#BFDBFE', fontWeight: '600', letterSpacing: 1 },
+  heroTitle: { color: '#FFFFFF', fontWeight: '700', letterSpacing: -0.3 },
+  heroSub: { color: '#BFDBFE' },
+  heroBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  heroBtnText: { color: '#fff', fontWeight: '600' },
+  heroEmoji: { fontSize: 56, marginLeft: 16 },
+  statsRow: { flexDirection: 'row', gap: 12 },
   statCard: {
-    flex: 1, backgroundColor: Colors.card, borderRadius: 12, padding: 14,
-    alignItems: 'center', gap: 4, borderWidth: 1, borderColor: Colors.border,
+    flex: 1,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
   },
-  statValue: { fontSize: 20, fontWeight: '700', color: Colors.textPrimary },
-  statLabel: { fontSize: 11, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
-  ctaButton: { borderRadius: 16, marginBottom: 24, overflow: 'hidden', elevation: 6 },
-  ctaGradient: {
-    flexDirection: 'row', alignItems: 'center', padding: 18,
+  statValue: { fontWeight: '700' },
+  statLabel: { textTransform: 'uppercase', letterSpacing: 0.5 },
+  sectionTitle: {
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: -8,
+  },
+  actionsCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
     gap: 14,
   },
-  ctaTextBlock: { flex: 1 },
-  ctaTitle: { fontSize: 17, fontWeight: '700', color: '#fff' },
-  ctaSub: { fontSize: 12, color: '#ffffff90', marginTop: 2 },
-  sectionTitle: {
-    fontSize: 13, fontWeight: '700', color: Colors.textSecondary,
-    textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12,
+  actionIcon: {
+    width: 40, height: 40, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
   },
-  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
-  quickCard: {
-    width: (width - 44) / 2,
-    backgroundColor: Colors.card, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: Colors.border, gap: 8,
+  actionText: { flex: 1, gap: 2 },
+  actionLabel: { fontWeight: '500' },
+  actionSub: {},
+  divider: { height: 1, marginLeft: 70 },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 14,
   },
-  quickIcon: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  quickLabel: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
-  quickSub: { fontSize: 11, color: Colors.textSecondary },
-  lastTranslation: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: Colors.card, borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: Colors.border,
+  historyDot: {
+    width: 34, height: 34, borderRadius: 17,
+    alignItems: 'center', justifyContent: 'center',
   },
-  lastLabel: { fontSize: 16, fontWeight: '600', color: Colors.textPrimary },
-  lastFil: { fontSize: 12, color: Colors.primary, marginTop: 2 },
-  lastConf: { fontSize: 14, fontWeight: '700', color: Colors.success },
+heroLogo: {
+  width: 80,
+  height: 80,
+  marginLeft: 16,
+  opacity: 0.92,
+},
 });

@@ -1,51 +1,56 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   requireNativeComponent,
-  UIManager,
-  findNodeHandle,
-  StyleSheet,
   View,
   Text,
-  NativeModules,
+  StyleSheet,
   PermissionsAndroid,
   Platform,
 } from 'react-native';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../constants/theme';
 
-const { CameraModule } = NativeModules;
+interface RNCameraProps {
+  style: any;
+  facingFront?: boolean;
+}
 
-let RNCamera: any = null;
+let RNCamera: React.ComponentType<RNCameraProps> | null = null;
 try {
-  RNCamera = requireNativeComponent('CameraView');
+  RNCamera = requireNativeComponent<RNCameraProps>('CameraView');
 } catch (e) {
   console.warn('CameraView native component not found');
 }
 
 interface NativeCameraProps {
   style?: any;
+  facingFront?: boolean;
 }
 
-export const NativeCamera: React.FC<NativeCameraProps> = ({ style }) => {
-  const [hasPermission, setHasPermission] = React.useState(false);
-  const [checking, setChecking] = React.useState(true);
+export const NativeCamera: React.FC<NativeCameraProps> = ({
+  style,
+  facingFront = true,
+}) => {
+  const { colors } = useTheme();
+  const [hasPermission, setHasPermission] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    checkPermission();
+    requestPermission();
   }, []);
 
-  const checkPermission = async () => {
+  const requestPermission = async () => {
     try {
       if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
+        const result = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.CAMERA,
           {
             title: 'Camera Permission',
-            message: 'MotionSpeak needs camera to recognize FSL signs.',
+            message: 'MotionSpeak needs camera access to recognize FSL signs.',
             buttonPositive: 'Allow',
             buttonNegative: 'Deny',
           }
         );
-        setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
+        setHasPermission(result === PermissionsAndroid.RESULTS.GRANTED);
       }
     } catch (e) {
       console.warn('Permission error:', e);
@@ -57,7 +62,9 @@ export const NativeCamera: React.FC<NativeCameraProps> = ({ style }) => {
   if (checking) {
     return (
       <View style={[styles.placeholder, style]}>
-        <Text style={styles.text}>Checking camera permission...</Text>
+        <Text style={[styles.text, { color: colors.textSecondary }]}>
+          Requesting camera access...
+        </Text>
       </View>
     );
   }
@@ -65,7 +72,9 @@ export const NativeCamera: React.FC<NativeCameraProps> = ({ style }) => {
   if (!hasPermission) {
     return (
       <View style={[styles.placeholder, style]}>
-        <Text style={styles.text}>Camera permission denied</Text>
+        <Text style={[styles.text, { color: colors.textSecondary }]}>
+          Camera permission required
+        </Text>
       </View>
     );
   }
@@ -73,26 +82,23 @@ export const NativeCamera: React.FC<NativeCameraProps> = ({ style }) => {
   if (!RNCamera) {
     return (
       <View style={[styles.placeholder, style]}>
-        <Text style={styles.text}>Camera module not available</Text>
+        <Text style={[styles.text, { color: colors.textSecondary }]}>
+          Camera module unavailable
+        </Text>
       </View>
     );
   }
 
-  return <RNCamera style={[styles.camera, style]} />;
+  return <RNCamera style={[styles.camera, style]} facingFront={facingFront} />;
 };
 
 const styles = StyleSheet.create({
-  camera: {
-    flex: 1,
-  },
+  camera: { flex: 1 },
   placeholder: {
     flex: 1,
     backgroundColor: '#050A0E',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  text: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-  },
+  text: { fontSize: 14 },
 });

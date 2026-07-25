@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,15 +6,16 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  StatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Colors } from '../constants/colors';
+import { NativeCamera } from '../components/NativeCamera';
 import { TranslationOverlay } from '../components/TranslationOverlay';
 import { CameraFrame } from '../components/CameraFrame';
-import { NativeCamera } from '../components/NativeCamera';
 import { useAppStore } from '../store/useAppStore';
 import { useTTS } from '../hooks/useTTS';
+import { useTheme } from '../constants/theme';
 
 const { height } = Dimensions.get('window');
 
@@ -24,6 +25,8 @@ interface Props {
 
 export const CameraScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors, fs, darkMode } = useTheme();
+  const [facingFront, setFacingFront] = useState<boolean>(true);
 
   const {
     isCameraActive,
@@ -31,6 +34,7 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
     currentTranslation,
     isProcessing,
     ttsEnabled,
+    setTtsEnabled,
     displayLanguage,
     showLandmarks,
     clearHistory,
@@ -40,11 +44,14 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
   const { speak } = useTTS();
 
   useEffect(() => {
+    StatusBar.setHidden(true);
     setCameraActive(true);
-    return () => setCameraActive(false);
+    return () => {
+      StatusBar.setHidden(false);
+      setCameraActive(false);
+    };
   }, []);
 
-  // ──────────────────────────────────────────────────────────────────────────── REMOVE IF AI IS READY
   const simulateDetection = () => {
     const mockSigns = [
       { label: 'Pain', labelFil: 'Sakit', confidence: 0.94 },
@@ -56,33 +63,28 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
     setCurrentTranslation({ ...random, timestamp: Date.now() });
     if (ttsEnabled) speak(random.label, random.labelFil);
   };
-  // ──────────────────────────────────────────────────────────────────────────── REMOVE IF AI IS READY
 
-  const handleSpeakPress = () => {
-    if (currentTranslation) {
-      speak(currentTranslation.label, currentTranslation.labelFil);
-    }
-  };
+  const btnBg = darkMode ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.92)';
+  const btnBorder = darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
+  const btnIconColor = darkMode ? '#FFFFFF' : '#0F172A';
+  const panelBg = darkMode ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.97)';
+  const panelBorder = darkMode ? 'rgba(255,255,255,0.08)' : colors.border;
+  const handleColor = darkMode ? 'rgba(255,255,255,0.2)' : colors.border;
 
   return (
     <View style={styles.container}>
+      {/* Camera Feed */}
+      <NativeCamera style={styles.cameraFull} facingFront={facingFront} />
 
-      {/* Real Native Camera Feed */}
-      <NativeCamera style={styles.cameraFull} />
+      {/* Dark mode overlays only */}
+      {darkMode && (
+        <>
+          <View style={styles.topGradient} pointerEvents="none" />
+          <View style={styles.bottomGradient} pointerEvents="none" />
+        </>
+      )}
 
-      {/* Mock trigger button — remove when Kotlin bridge is ready */}
-      <View style={styles.mockOverlay}>
-        <TouchableOpacity
-          style={styles.mockBtn}
-          onPress={simulateDetection}
-          activeOpacity={0.8}
-        >
-          <Icon name="hand-wave" size={18} color={Colors.primary} />
-          <Text style={styles.mockBtnText}>Simulate Sign Detection</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Camera Frame Guides */}
+      {/* Camera Frame Guide */}
       {showLandmarks && (
         <CameraFrame
           isActive={isCameraActive}
@@ -93,64 +95,110 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
       {/* Top Bar */}
       <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity
-          style={styles.topBtn}
+          style={[styles.iconBtn, { backgroundColor: btnBg, borderColor: btnBorder }]}
           onPress={() => navigation.goBack()}
           activeOpacity={0.8}
         >
-          <Icon name="arrow-left" size={22} color="#fff" />
+          <Icon name="close" size={20} color={btnIconColor} />
         </TouchableOpacity>
 
-        <View style={styles.liveBadge}>
+        <View style={[styles.liveChip, { backgroundColor: btnBg, borderColor: btnBorder }]}>
           <View style={[
             styles.liveDot,
-            { backgroundColor: isCameraActive ? Colors.error : Colors.textMuted },
+            { backgroundColor: isCameraActive ? '#EF4444' : '#94A3B8' },
           ]} />
-          <Text style={styles.liveText}>
+          <Text style={[styles.liveText, { color: btnIconColor, fontSize: fs(11) }]}>
             {isCameraActive ? 'LIVE' : 'STANDBY'}
           </Text>
         </View>
 
         <TouchableOpacity
-          style={styles.topBtn}
-          onPress={() => {
-            Alert.alert('Clear History', 'Remove all translation history?', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Clear', style: 'destructive', onPress: clearHistory },
-            ]);
-          }}
+          style={[styles.iconBtn, { backgroundColor: btnBg, borderColor: btnBorder }]}
+          onPress={() =>
+            Alert.alert(
+              'Clear History',
+              'Remove all translation history?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Clear', style: 'destructive', onPress: clearHistory },
+              ]
+            )
+          }
           activeOpacity={0.8}
         >
-          <Icon name="delete-sweep" size={22} color="#fff" />
+          <Icon name="delete-outline" size={20} color={btnIconColor} />
         </TouchableOpacity>
       </View>
 
-      {/* Bottom Translation Panel */}
-      <View style={[styles.bottomPanel, { paddingBottom: insets.bottom + 16 }]}>
-        <View style={styles.panelHandle} />
+      {/* Side Controls */}
+      <View style={[styles.sideControls, { top: height * 0.3 }]}>
+        {/* TTS toggle — mute/unmute */}
+        <TouchableOpacity
+          style={[
+            styles.iconBtn,
+            {
+              backgroundColor: ttsEnabled ? colors.primary : btnBg,
+              borderColor: ttsEnabled ? colors.primary : btnBorder,
+            },
+          ]}
+          onPress={() => setTtsEnabled(!ttsEnabled)}
+          activeOpacity={0.8}
+        >
+          <Icon
+            name={ttsEnabled ? 'volume-high' : 'volume-mute'}
+            size={18}
+            color={ttsEnabled ? '#FFFFFF' : btnIconColor}
+          />
+        </TouchableOpacity>
+
+        {/* Camera flip */}
+        <TouchableOpacity
+          style={[styles.iconBtn, { backgroundColor: btnBg, borderColor: btnBorder }]}
+          onPress={() => setFacingFront(prev => !prev)}
+          activeOpacity={0.8}
+        >
+          <Icon name="camera-flip-outline" size={18} color={btnIconColor} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Bottom Panel */}
+      <View style={[
+        styles.bottomPanel,
+        {
+          backgroundColor: panelBg,
+          borderTopColor: panelBorder,
+          paddingBottom: insets.bottom + 16,
+        },
+      ]}>
+        <View style={[styles.panelHandle, { backgroundColor: handleColor }]} />
+
         <TranslationOverlay
           result={currentTranslation}
           isProcessing={isProcessing}
           displayLanguage={displayLanguage}
-          onSpeakPress={handleSpeakPress}
+          onSpeakPress={() => {
+            if (currentTranslation) {
+              speak(currentTranslation.label, currentTranslation.labelFil);
+            }
+          }}
           ttsEnabled={ttsEnabled}
         />
-      </View>
 
-      {/* Side Quick Controls */}
-      <View style={[styles.sideControls, { top: height * 0.35 }]}>
         <TouchableOpacity
-          style={styles.sideBtn}
-          onPress={() => navigation.navigate('Dictionary')}
-          activeOpacity={0.7}
+          style={[
+            styles.simulateBtn,
+            {
+              backgroundColor: colors.primaryLight,
+              borderColor: colors.primary + '35',
+            },
+          ]}
+          onPress={simulateDetection}
+          activeOpacity={0.8}
         >
-          <Icon name="book-open-variant" size={20} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.sideBtn} activeOpacity={0.7}>
-          <Icon
-            name={ttsEnabled ? 'volume-high' : 'volume-off'}
-            size={20}
-            color="#fff"
-          />
+          <Icon name="hand-wave-outline" size={16} color={colors.primary} />
+          <Text style={[styles.simulateBtnText, { color: colors.primary, fontSize: fs(13) }]}>
+            Simulate Detection
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -158,10 +206,7 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
+  container: { flex: 1, backgroundColor: '#000' },
   cameraFull: {
     position: 'absolute',
     top: 0,
@@ -169,79 +214,76 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-  mockOverlay: {
+  topGradient: {
     position: 'absolute',
-    bottom: 220,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
+    top: 0, left: 0, right: 0,
+    height: 160,
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  mockBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: Colors.primary + '20',
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: Colors.primary + '40',
-  },
-  mockBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.primary,
+  bottomGradient: {
+    position: 'absolute',
+    bottom: 0, left: 0, right: 0,
+    height: 320,
+    backgroundColor: 'rgba(0,0,0,0.45)',
   },
   topBar: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 12,
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  liveChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+  },
+  liveDot: { width: 6, height: 6, borderRadius: 3 },
+  liveText: { fontWeight: '600', letterSpacing: 1 },
+  sideControls: {
     position: 'absolute',
-    top: 0, left: 0, right: 0,
-  },
-  topBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#00000060',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  liveBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#00000070', borderRadius: 20,
-    paddingHorizontal: 12, paddingVertical: 6,
-  },
-  liveDot: {
-    width: 7, height: 7, borderRadius: 4,
-  },
-  liveText: {
-    fontSize: 11, fontWeight: '700', color: '#fff', letterSpacing: 1,
+    right: 16,
+    gap: 10,
   },
   bottomPanel: {
     position: 'absolute',
     bottom: 0, left: 0, right: 0,
-    backgroundColor: 'rgba(13, 17, 23, 0.95)',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: 20,
-    paddingTop: 12,
+    paddingTop: 8,
     borderTopWidth: 1,
-    borderColor: Colors.border,
   },
   panelHandle: {
-    width: 40, height: 4, borderRadius: 2,
-    backgroundColor: Colors.textMuted,
-    alignSelf: 'center', marginBottom: 16,
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
   },
-  sideControls: {
-    position: 'absolute',
-    right: 12,
-    gap: 10,
+  simulateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 12,
+    borderRadius: 10,
+    paddingVertical: 12,
+    borderWidth: 1,
   },
-  sideBtn: {
-    width: 42, height: 42, borderRadius: 21,
-    backgroundColor: '#00000070',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: '#ffffff20',
-  },
+  simulateBtnText: { fontWeight: '500' },
 });

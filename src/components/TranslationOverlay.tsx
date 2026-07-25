@@ -7,54 +7,60 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Colors } from '../constants/colors';
-import { ConfidenceBar } from './ConfidenceBar';
 import { TranslationResult } from '../store/useAppStore';
+import { useTheme } from '../constants/theme';
 
-interface TranslationOverlayProps {
+interface Props {
   result: TranslationResult | null;
   isProcessing: boolean;
-  displayLanguage: 'en' | 'fil' | 'both';
+  displayLanguage: 'en' | 'fil';
   onSpeakPress?: () => void;
   ttsEnabled: boolean;
 }
 
-export const TranslationOverlay: React.FC<TranslationOverlayProps> = ({
+export const TranslationOverlay: React.FC<Props> = ({
   result,
   isProcessing,
   displayLanguage,
   onSpeakPress,
   ttsEnabled,
 }) => {
+  const { colors, fs } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     if (result) {
+      slideAnim.setValue(20);
       Animated.parallel([
         Animated.timing(fadeAnim, {
-          toValue: 1, duration: 250, useNativeDriver: true,
+          toValue: 1, duration: 200, useNativeDriver: true,
         }),
         Animated.spring(slideAnim, {
-          toValue: 0, speed: 14, bounciness: 6, useNativeDriver: true,
+          toValue: 0, speed: 18, bounciness: 4, useNativeDriver: true,
         }),
       ]).start();
     } else {
       Animated.timing(fadeAnim, {
-        toValue: 0, duration: 200, useNativeDriver: true,
+        toValue: 0, duration: 150, useNativeDriver: true,
       }).start();
-      slideAnim.setValue(30);
     }
   }, [result?.label]);
 
   if (!result && !isProcessing) {
     return (
       <View style={styles.idleContainer}>
-        <View style={styles.idleIconRing}>
-          <Icon name="hand-wave-outline" size={28} color={Colors.primary} />
+        <View style={[styles.idleIcon, { backgroundColor: colors.primaryLight }]}>
+          <Icon name="hand-wave-outline" size={24} color={colors.primary} />
         </View>
-        <Text style={styles.idleText}>Start signing to translate</Text>
-        <Text style={styles.idleSubtext}>Position your hands within the camera frame</Text>
+        <View style={styles.idleTextBlock}>
+          <Text style={[styles.idleTitle, { color: colors.textPrimary, fontSize: fs(15) }]}>
+            Ready to translate
+          </Text>
+          <Text style={[styles.idleSub, { color: colors.textSecondary, fontSize: fs(13) }]}>
+            Position hands within the frame
+          </Text>
+        </View>
       </View>
     );
   }
@@ -62,46 +68,68 @@ export const TranslationOverlay: React.FC<TranslationOverlayProps> = ({
   if (isProcessing && !result) {
     return (
       <View style={styles.idleContainer}>
-        <View style={styles.processingRing}>
-          <Icon name="progress-clock" size={26} color={Colors.primary} />
+        <View style={[styles.idleIcon, { backgroundColor: colors.warningLight }]}>
+          <Icon name="motion-sensor" size={24} color={colors.warning} />
         </View>
-        <Text style={styles.idleText}>Analyzing gesture...</Text>
+        <View style={styles.idleTextBlock}>
+          <Text style={[styles.idleTitle, { color: colors.textPrimary, fontSize: fs(15) }]}>
+            Analyzing...
+          </Text>
+        </View>
       </View>
     );
   }
 
   return (
     <Animated.View
-      style={[
-        styles.resultContainer,
-        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-      ]}
+      style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
     >
-      <View style={styles.resultHeader}>
-        <View style={styles.signBadge}>
-          <Icon name="hand-right" size={14} color={Colors.primary} />
-          <Text style={styles.signBadgeText}>FSL DETECTED</Text>
+      <View style={styles.resultRow}>
+        <View style={styles.resultTextBlock}>
+          {displayLanguage === 'fil' ? (
+            <>
+              <Text
+                style={[styles.mainLabel, { color: colors.textPrimary, fontSize: fs(30) }]}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+              >
+                {result?.labelFil}
+              </Text>
+              <Text style={[styles.subLabel, { color: colors.textSecondary, fontSize: fs(14) }]}>
+                {result?.label}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text
+                style={[styles.mainLabel, { color: colors.textPrimary, fontSize: fs(30) }]}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+              >
+                {result?.label}
+              </Text>
+              <Text style={[styles.subLabel, { color: colors.textSecondary, fontSize: fs(14) }]}>
+                {result?.labelFil}
+              </Text>
+            </>
+          )}
         </View>
+
         {ttsEnabled && (
           <TouchableOpacity
-            style={styles.speakBtn}
+            style={[
+              styles.speakBtn,
+              {
+                backgroundColor: colors.primaryLight,
+                borderColor: colors.primary + '30',
+              },
+            ]}
             onPress={onSpeakPress}
             activeOpacity={0.7}
           >
-            <Icon name="volume-high" size={18} color={Colors.primary} />
+            <Icon name="volume-high" size={20} color={colors.primary} />
           </TouchableOpacity>
         )}
-      </View>
-
-      {(displayLanguage === 'en' || displayLanguage === 'both') && (
-        <Text style={styles.translationText}>{result?.label}</Text>
-      )}
-      {(displayLanguage === 'fil' || displayLanguage === 'both') && (
-        <Text style={styles.translationFilipino}>{result?.labelFil}</Text>
-      )}
-
-      <View style={styles.confidenceSection}>
-        <ConfidenceBar confidence={result?.confidence ?? 0} />
       </View>
     </Animated.View>
   );
@@ -109,90 +137,42 @@ export const TranslationOverlay: React.FC<TranslationOverlayProps> = ({
 
 const styles = StyleSheet.create({
   idleContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 20,
+    gap: 12,
+    paddingVertical: 8,
   },
-  idleIconRing: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 1.5,
-    borderColor: Colors.primary + '60',
-    backgroundColor: Colors.primary + '15',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  processingRing: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 1.5,
-    borderColor: Colors.warning + '60',
-    backgroundColor: Colors.warning + '15',
+  idleIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
   },
-  idleText: {
-    fontSize: 15,
-    color: Colors.textPrimary,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  idleSubtext: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  resultContainer: {
-    width: '100%',
-  },
-  resultHeader: {
+  idleTextBlock: { flex: 1 },
+  idleTitle: { fontWeight: '500' },
+  idleSub: { marginTop: 2 },
+  resultRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    gap: 12,
   },
-  signBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.primary + '20',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    gap: 5,
-  },
-  signBadgeText: {
-    fontSize: 10,
-    color: Colors.primary,
+  resultTextBlock: { flex: 1 },
+  mainLabel: {
     fontWeight: '700',
-    letterSpacing: 0.8,
+    letterSpacing: -0.3,
+  },
+  subLabel: {
+    marginTop: 4,
+    fontWeight: '400',
   },
   speakBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.primary + '20',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  translationText: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    letterSpacing: 0.5,
-    lineHeight: 38,
-  },
-  translationFilipino: {
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.primary,
-    marginTop: 2,
-    marginBottom: 12,
-  },
-  confidenceSection: {
-    marginTop: 8,
+    borderWidth: 1,
   },
 });

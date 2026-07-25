@@ -8,46 +8,48 @@ export interface TranslationResult {
 }
 
 interface AppState {
-  // Camera
   isCameraActive: boolean;
   setCameraActive: (val: boolean) => void;
 
-  // Translation
   currentTranslation: TranslationResult | null;
   translationHistory: TranslationResult[];
   setCurrentTranslation: (result: TranslationResult | null) => void;
   clearHistory: () => void;
 
-  // Settings
-  confidenceThreshold: number;
-  setConfidenceThreshold: (val: number) => void;
+  darkMode: boolean;
+  setDarkMode: (val: boolean) => void;
+  fontScale: number;
+  setFontScale: (val: number) => void;
+
   ttsEnabled: boolean;
   setTtsEnabled: (val: boolean) => void;
+  ttsSpeed: number;
+  setTtsSpeed: (val: number) => void;
   ttsLanguage: 'en' | 'fil';
   setTtsLanguage: (val: 'en' | 'fil') => void;
+
+  displayLanguage: 'en' | 'fil';
+  setDisplayLanguage: (val: 'en' | 'fil') => void;
   showLandmarks: boolean;
   setShowLandmarks: (val: boolean) => void;
-  displayLanguage: 'en' | 'fil' | 'both';
-  setDisplayLanguage: (val: 'en' | 'fil' | 'both') => void;
+  confidenceThreshold: number;
+  setConfidenceThreshold: (val: number) => void;
 
-  // UI
   isProcessing: boolean;
   setIsProcessing: (val: boolean) => void;
 }
 
-export const useAppStore = create<AppState>((set, get) => ({
-  // Camera
+export const useAppStore = create<AppState>((set) => ({
   isCameraActive: false,
   setCameraActive: (val) => set({ isCameraActive: val }),
 
-  // Translation
   currentTranslation: null,
   translationHistory: [],
   setCurrentTranslation: (result) => {
     if (result) {
       set((state) => ({
         currentTranslation: result,
-        translationHistory: [result, ...state.translationHistory].slice(0, 50), // Keep last 50
+        translationHistory: [result, ...state.translationHistory].slice(0, 50),
       }));
     } else {
       set({ currentTranslation: null });
@@ -55,19 +57,25 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   clearHistory: () => set({ translationHistory: [], currentTranslation: null }),
 
-  // Settings
-  confidenceThreshold: 0.85,
-  setConfidenceThreshold: (val) => set({ confidenceThreshold: val }),
+  darkMode: false,
+  setDarkMode: (val) => set({ darkMode: val }),
+  fontScale: 1.0,
+  setFontScale: (val) => set({ fontScale: val }),
+
   ttsEnabled: true,
   setTtsEnabled: (val) => set({ ttsEnabled: val }),
-  ttsLanguage: 'en',
+  ttsSpeed: 0.5,
+  setTtsSpeed: (val) => set({ ttsSpeed: val }),
+  ttsLanguage: 'fil',
   setTtsLanguage: (val) => set({ ttsLanguage: val }),
+
+  displayLanguage: 'fil',
+  setDisplayLanguage: (val) => set({ displayLanguage: val }),
   showLandmarks: true,
   setShowLandmarks: (val) => set({ showLandmarks: val }),
-  displayLanguage: 'both',
-  setDisplayLanguage: (val) => set({ displayLanguage: val }),
+  confidenceThreshold: 0.85,
+  setConfidenceThreshold: (val) => set({ confidenceThreshold: val }),
 
-  // UI
   isProcessing: false,
   setIsProcessing: (val) => set({ isProcessing: val }),
 }));

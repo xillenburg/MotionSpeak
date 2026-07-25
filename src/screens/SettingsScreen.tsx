@@ -6,169 +6,364 @@ import {
   ScrollView,
   Switch,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Slider from '@react-native-community/slider';
-import type { SliderProps } from '@react-native-community/slider';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Colors } from '../constants/colors';
-import { Header } from '../components/Header';
+import { useTheme } from '../constants/theme';
 import { useAppStore } from '../store/useAppStore';
 
-interface Props {
-  navigation: any;
-}
+interface Props { navigation: any; }
+
+const SectionHeader: React.FC<{ title: string; colors: any; fs: any }> = ({ title, colors, fs }) => (
+  <Text style={[styles.sectionHeader, { color: colors.textSecondary, fontSize: fs(12) }]}>
+    {title}
+  </Text>
+);
 
 const SettingRow: React.FC<{
   icon: string;
+  iconColor: string;
   label: string;
   sub?: string;
   right: React.ReactNode;
-  color?: string;
-}> = ({ icon, label, sub, right, color = Colors.primary }) => (
-  <View style={styles.settingRow}>
-    <View style={[styles.settingIcon, { backgroundColor: color + '20' }]}>
-      <Icon name={icon} size={18} color={color} />
-    </View>
-    <View style={styles.settingText}>
-      <Text style={styles.settingLabel}>{label}</Text>
-      {sub && <Text style={styles.settingSub}>{sub}</Text>}
-    </View>
-    {right}
-  </View>
+  colors: any;
+  fs: any;
+  onPress?: () => void;
+  isLast?: boolean;
+}> = ({ icon, iconColor, label, sub, right, colors, fs, onPress, isLast }) => (
+  <>
+    <TouchableOpacity
+      style={styles.row}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.6 : 1}
+    >
+      <View style={[styles.rowIcon, { backgroundColor: iconColor + '15' }]}>
+        <Icon name={icon} size={18} color={iconColor} />
+      </View>
+      <View style={styles.rowText}>
+        <Text style={[styles.rowLabel, { color: colors.textPrimary, fontSize: fs(15) }]}>
+          {label}
+        </Text>
+        {sub && (
+          <Text style={[styles.rowSub, { color: colors.textSecondary, fontSize: fs(12) }]}>
+            {sub}
+          </Text>
+        )}
+      </View>
+      {right}
+    </TouchableOpacity>
+    {!isLast && (
+      <View style={[styles.divider, { backgroundColor: colors.divider, marginLeft: 60 }]} />
+    )}
+  </>
 );
 
 export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors, fs } = useTheme();
   const {
-    confidenceThreshold, setConfidenceThreshold,
+    darkMode, setDarkMode,
+    fontScale, setFontScale,
     ttsEnabled, setTtsEnabled,
+    ttsSpeed, setTtsSpeed,
     ttsLanguage, setTtsLanguage,
-    showLandmarks, setShowLandmarks,
     displayLanguage, setDisplayLanguage,
+    showLandmarks, setShowLandmarks,
     clearHistory, translationHistory,
   } = useAppStore();
 
-  return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <Header title="Settings" showBack onBack={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={styles.scroll}>
+  const fontScaleOptions = [
+    { label: 'Small', value: 0.85 },
+    { label: 'Normal', value: 1.0 },
+    { label: 'Large', value: 1.15 },
+    { label: 'X-Large', value: 1.3 },
+  ];
 
-        {/* Recognition */}
-        <Text style={styles.sectionTitle}>Recognition</Text>
-        <View style={styles.card}>
+  const ttsSpeedOptions = [
+    { label: 'Slow', value: 0.3 },
+    { label: 'Normal', value: 0.5 },
+    { label: 'Fast', value: 0.75 },
+  ];
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[
+        styles.header,
+        { backgroundColor: colors.surface, borderBottomColor: colors.border, paddingTop: insets.top + 12 },
+      ]}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary, fontSize: fs(20) }]}>
+          Settings
+        </Text>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+
+        {/* Appearance */}
+        <SectionHeader title="APPEARANCE" colors={colors} fs={fs} />
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingRow
-            icon="target"
-            label="Confidence Threshold"
-            sub={`Current: ${Math.round(confidenceThreshold * 100)}% — only show results above this`}
-            color={Colors.primary}
-            right={null}
+            icon="weather-night"
+            iconColor="#8B5CF6"
+            label="Dark Mode"
+            sub={darkMode ? 'On — using dark theme' : 'Off — using light theme'}
+            colors={colors} fs={fs}
+            right={
+              <Switch
+                value={darkMode}
+                onValueChange={setDarkMode}
+                trackColor={{ false: colors.border, true: '#8B5CF6' }}
+                thumbColor="#fff"
+              />
+            }
           />
-          <Slider
-            style={styles.slider}
-            minimumValue={0.5}
-            maximumValue={0.99}
-            step={0.01}
-            value={confidenceThreshold}
-            onValueChange={(val: number) => setConfidenceThreshold(val)}
-            minimumTrackTintColor={Colors.primary}
-            maximumTrackTintColor={Colors.border}
-            thumbTintColor={Colors.primary}
-          />
-          <View style={styles.sliderLabels}>
-            <Text style={styles.sliderLabel}>50% (Relaxed)</Text>
-            <Text style={styles.sliderLabel}>99% (Strict)</Text>
+          <View style={[styles.divider, { backgroundColor: colors.divider, marginLeft: 60 }]} />
+          <View style={styles.row}>
+            <View style={[styles.rowIcon, { backgroundColor: '#3B82F615' }]}>
+              <Icon name="format-size" size={18} color="#3B82F6" />
+            </View>
+            <View style={styles.rowText}>
+              <Text style={[styles.rowLabel, { color: colors.textPrimary, fontSize: fs(15) }]}>
+                Font Size
+              </Text>
+              <View style={styles.segmentRow}>
+                {fontScaleOptions.map(opt => (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[
+                      styles.segment,
+                      {
+                        backgroundColor: fontScale === opt.value
+                          ? colors.primary
+                          : colors.surfaceElevated,
+                        borderColor: fontScale === opt.value
+                          ? colors.primary
+                          : colors.border,
+                      },
+                    ]}
+                    onPress={() => setFontScale(opt.value)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[
+                      styles.segmentText,
+                      {
+                        color: fontScale === opt.value ? '#FFFFFF' : colors.textSecondary,
+                        fontSize: fs(11),
+                      },
+                    ]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
           </View>
         </View>
 
-        {/* Display */}
-        <Text style={styles.sectionTitle}>Display</Text>
-        <View style={styles.card}>
+        {/* Translation Display */}
+        <SectionHeader title="TRANSLATION DISPLAY" colors={colors} fs={fs} />
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.row}>
+            <View style={[styles.rowIcon, { backgroundColor: '#10B98115' }]}>
+              <Icon name="translate" size={18} color="#10B981" />
+            </View>
+            <View style={styles.rowText}>
+              <Text style={[styles.rowLabel, { color: colors.textPrimary, fontSize: fs(15) }]}>
+                Translation Language
+              </Text>
+              <Text style={[styles.rowSub, { color: colors.textSecondary, fontSize: fs(12) }]}>
+                Language shown on camera screen
+              </Text>
+              <View style={styles.segmentRow}>
+                {([
+                  { key: 'fil', label: '🇵🇭 Filipino' },
+                  { key: 'en', label: '🇺🇸 English' },
+                ] as const).map(opt => (
+                  <TouchableOpacity
+                    key={opt.key}
+                    style={[
+                      styles.segment,
+                      {
+                        backgroundColor: displayLanguage === opt.key
+                          ? '#10B981'
+                          : colors.surfaceElevated,
+                        borderColor: displayLanguage === opt.key
+                          ? '#10B981'
+                          : colors.border,
+                      },
+                    ]}
+                    onPress={() => setDisplayLanguage(opt.key)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[
+                      styles.segmentText,
+                      {
+                        color: displayLanguage === opt.key ? '#FFFFFF' : colors.textSecondary,
+                        fontSize: fs(12),
+                      },
+                    ]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+          <View style={[styles.divider, { backgroundColor: colors.divider, marginLeft: 60 }]} />
           <SettingRow
-            icon="hand-wave"
-            label="Show Camera Guide Frame"
-            sub="Corner guides while signing"
-            color={Colors.info}
+            icon="camera-outline"
+            iconColor="#06B6D4"
+            label="Show Camera Frame"
+            sub="Guide corners on camera screen"
+            colors={colors} fs={fs}
+            isLast
             right={
               <Switch
                 value={showLandmarks}
                 onValueChange={setShowLandmarks}
-                trackColor={{ false: Colors.border, true: Colors.primary }}
+                trackColor={{ false: colors.border, true: '#06B6D4' }}
                 thumbColor="#fff"
               />
             }
           />
-          <View style={styles.divider} />
-          <Text style={styles.subSectionLabel}>Translation Language</Text>
-          {(['en', 'fil', 'both'] as const).map(lang => (
-            <TouchableOpacity
-              key={lang}
-              style={styles.radioRow}
-              onPress={() => setDisplayLanguage(lang)}
-            >
-              <View style={[styles.radio, displayLanguage === lang && styles.radioActive]}>
-                {displayLanguage === lang && <View style={styles.radioDot} />}
-              </View>
-              <Text style={styles.radioLabel}>
-                {lang === 'en' ? 'English only' : lang === 'fil' ? 'Filipino only' : 'Both (English + Filipino)'}
-              </Text>
-            </TouchableOpacity>
-          ))}
         </View>
 
         {/* Text-to-Speech */}
-        <Text style={styles.sectionTitle}>Text-to-Speech</Text>
-        <View style={styles.card}>
+        <SectionHeader title="TEXT-TO-SPEECH" colors={colors} fs={fs} />
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingRow
             icon="volume-high"
+            iconColor="#F59E0B"
             label="Enable TTS"
-            sub="Auto-speak recognized signs"
-            color={Colors.success}
+            sub="Automatically speak recognized signs"
+            colors={colors} fs={fs}
             right={
               <Switch
                 value={ttsEnabled}
                 onValueChange={setTtsEnabled}
-                trackColor={{ false: Colors.border, true: Colors.success }}
+                trackColor={{ false: colors.border, true: '#F59E0B' }}
                 thumbColor="#fff"
               />
             }
           />
-          <View style={styles.divider} />
-          <Text style={styles.subSectionLabel}>TTS Language</Text>
-          {(['en', 'fil'] as const).map(lang => (
-            <TouchableOpacity
-              key={lang}
-              style={styles.radioRow}
-              onPress={() => setTtsLanguage(lang)}
-            >
-              <View style={[styles.radio, ttsLanguage === lang && styles.radioActive]}>
-                {ttsLanguage === lang && <View style={styles.radioDot} />}
-              </View>
-              <Text style={styles.radioLabel}>
-                {lang === 'en' ? '🇺🇸 English (en-US)' : '🇵🇭 Filipino (fil-PH)'}
+          <View style={[styles.divider, { backgroundColor: colors.divider, marginLeft: 60 }]} />
+          <View style={styles.row}>
+            <View style={[styles.rowIcon, { backgroundColor: '#F59E0B15' }]}>
+              <Icon name="speedometer" size={18} color="#F59E0B" />
+            </View>
+            <View style={styles.rowText}>
+              <Text style={[styles.rowLabel, { color: colors.textPrimary, fontSize: fs(15) }]}>
+                Speech Speed
               </Text>
-            </TouchableOpacity>
-          ))}
+              <View style={styles.segmentRow}>
+                {ttsSpeedOptions.map(opt => (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[
+                      styles.segment,
+                      {
+                        backgroundColor: ttsSpeed === opt.value
+                          ? '#F59E0B'
+                          : colors.surfaceElevated,
+                        borderColor: ttsSpeed === opt.value
+                          ? '#F59E0B'
+                          : colors.border,
+                      },
+                    ]}
+                    onPress={() => setTtsSpeed(opt.value)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[
+                      styles.segmentText,
+                      {
+                        color: ttsSpeed === opt.value ? '#FFFFFF' : colors.textSecondary,
+                        fontSize: fs(11),
+                      },
+                    ]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+          <View style={[styles.divider, { backgroundColor: colors.divider, marginLeft: 60 }]} />
+          <View style={styles.row}>
+            <View style={[styles.rowIcon, { backgroundColor: '#F59E0B15' }]}>
+              <Icon name="earth" size={18} color="#F59E0B" />
+            </View>
+            <View style={styles.rowText}>
+              <Text style={[styles.rowLabel, { color: colors.textPrimary, fontSize: fs(15) }]}>
+                TTS Language
+              </Text>
+              <View style={styles.segmentRow}>
+                {([
+                  { key: 'fil', label: '🇵🇭 Filipino' },
+                  { key: 'en', label: '🇺🇸 English' },
+                ] as const).map(opt => (
+                  <TouchableOpacity
+                    key={opt.key}
+                    style={[
+                      styles.segment,
+                      {
+                        backgroundColor: ttsLanguage === opt.key
+                          ? '#F59E0B'
+                          : colors.surfaceElevated,
+                        borderColor: ttsLanguage === opt.key
+                          ? '#F59E0B'
+                          : colors.border,
+                      },
+                    ]}
+                    onPress={() => setTtsLanguage(opt.key)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[
+                      styles.segmentText,
+                      {
+                        color: ttsLanguage === opt.key ? '#FFFFFF' : colors.textSecondary,
+                        fontSize: fs(11),
+                      },
+                    ]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
         </View>
 
         {/* Data */}
-        <Text style={styles.sectionTitle}>Data</Text>
-        <View style={styles.card}>
+        <SectionHeader title="DATA" colors={colors} fs={fs} />
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingRow
-            icon="history"
-            label="Clear Translation History"
-            sub={`${translationHistory.length} entries stored`}
-            color={Colors.error}
-            right={
-              <TouchableOpacity
-                style={styles.clearBtn}
-                onPress={clearHistory}
-              >
-                <Text style={styles.clearBtnText}>Clear</Text>
-              </TouchableOpacity>
+            icon="delete-outline"
+            iconColor="#EF4444"
+            label="Clear History"
+            sub={`${translationHistory.length} translation entries stored`}
+            colors={colors} fs={fs}
+            isLast
+            onPress={() =>
+              Alert.alert('Clear History', 'This will remove all translation history.', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Clear', style: 'destructive', onPress: clearHistory },
+              ])
             }
+            right={<Icon name="chevron-right" size={18} color={colors.textMuted} />}
           />
         </View>
+
+        <TouchableOpacity
+          style={[styles.aboutRow, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => navigation.navigate('About')}
+          activeOpacity={0.7}
+        >
+          <Icon name="information-outline" size={18} color={colors.primary} />
+          <Text style={[styles.aboutText, { color: colors.primary, fontSize: fs(14) }]}>
+            About MotionSpeak
+          </Text>
+          <Icon name="chevron-right" size={16} color={colors.textMuted} />
+        </TouchableOpacity>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -177,59 +372,56 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  scroll: { padding: 16 },
-  sectionTitle: {
-    fontSize: 11, fontWeight: '700', color: Colors.textSecondary,
-    textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8, marginTop: 16,
+  container: { flex: 1 },
+  header: {
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
   },
-  card: {
-    backgroundColor: Colors.card, borderRadius: 14,
-    borderWidth: 1, borderColor: Colors.border,
-    overflow: 'hidden',
+  headerTitle: { fontWeight: '700', letterSpacing: -0.3 },
+  scroll: { padding: 16, gap: 8 },
+  sectionHeader: {
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: 8,
+    marginBottom: 4,
+    marginLeft: 4,
   },
-  settingRow: {
-    flexDirection: 'row', alignItems: 'center',
-    padding: 14, gap: 12,
+  card: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 14,
   },
-  settingIcon: {
-    width: 36, height: 36, borderRadius: 9,
-    alignItems: 'center', justifyContent: 'center',
+  rowIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  settingText: { flex: 1 },
-  settingLabel: { fontSize: 15, fontWeight: '500', color: Colors.textPrimary },
-  settingSub: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-  divider: { height: 1, backgroundColor: Colors.border, marginHorizontal: 14 },
-  slider: { marginHorizontal: 14 },
-  sliderLabels: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    paddingHorizontal: 14, paddingBottom: 14,
+  rowText: { flex: 1, gap: 6 },
+  rowLabel: { fontWeight: '500' },
+  rowSub: {},
+  divider: { height: 1 },
+  segmentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  segment: {
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
   },
-  sliderLabel: { fontSize: 11, color: Colors.textMuted },
-  subSectionLabel: {
-    fontSize: 12, fontWeight: '600', color: Colors.textSecondary,
-    paddingHorizontal: 14, paddingTop: 12, paddingBottom: 8,
-    textTransform: 'uppercase', letterSpacing: 0.5,
+  segmentText: { fontWeight: '500' },
+  aboutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginTop: 8,
   },
-  radioRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingHorizontal: 14, paddingVertical: 10,
-  },
-  radio: {
-    width: 20, height: 20, borderRadius: 10,
-    borderWidth: 2, borderColor: Colors.textMuted,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  radioActive: { borderColor: Colors.primary },
-  radioDot: {
-    width: 10, height: 10, borderRadius: 5,
-    backgroundColor: Colors.primary,
-  },
-  radioLabel: { fontSize: 14, color: Colors.textPrimary },
-  clearBtn: {
-    backgroundColor: Colors.error + '20', borderRadius: 8,
-    paddingHorizontal: 14, paddingVertical: 7,
-    borderWidth: 1, borderColor: Colors.error + '40',
-  },
-  clearBtnText: { fontSize: 13, fontWeight: '600', color: Colors.error },
+  aboutText: { flex: 1, fontWeight: '500' },
 });

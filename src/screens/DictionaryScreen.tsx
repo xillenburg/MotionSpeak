@@ -7,102 +7,174 @@ import {
   TextInput,
   TouchableOpacity,
   Modal,
+  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Colors } from '../constants/colors';
-import { Header } from '../components/Header';
-import { SignCard } from '../components/SignCard';
+import { useTheme } from '../constants/theme';
 import { FSL_SIGNS, SIGN_CATEGORIES, FSLSign, SignCategory } from '../constants/signs';
 
 interface Props {
   navigation: any;
 }
 
-export const DictionaryScreen: React.FC<Props> = ({ navigation }) => {
+const CATEGORY_COLORS: Record<string, string> = {
+  symptoms: '#EF4444',
+  body_parts: '#3B82F6',
+  procedures: '#F59E0B',
+  history: '#8B5CF6',
+  conversational: '#10B981',
+};
+
+export const DictionaryScreen: React.FC<Props> = () => {
   const insets = useSafeAreaInsets();
+  const { colors, fs } = useTheme();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<SignCategory | 'all'>('all');
   const [selectedSign, setSelectedSign] = useState<FSLSign | null>(null);
 
-  const filteredSigns = useMemo(() => {
-    return FSL_SIGNS.filter(sign => {
-      const matchesSearch =
-        sign.label.toLowerCase().includes(search.toLowerCase()) ||
-        sign.labelFil.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = activeCategory === 'all' || sign.category === activeCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [search, activeCategory]);
+  const filtered = useMemo(() =>
+    FSL_SIGNS.filter(s => {
+      const matchSearch =
+        s.label.toLowerCase().includes(search.toLowerCase()) ||
+        s.labelFil.toLowerCase().includes(search.toLowerCase());
+      const matchCat = activeCategory === 'all' || s.category === activeCategory;
+      return matchSearch && matchCat;
+    }),
+    [search, activeCategory]
+  );
+
+  const catColor = (cat: string) => CATEGORY_COLORS[cat] ?? colors.primary;
+
+  const categories = [
+    { key: 'all', label: 'All' },
+    ...SIGN_CATEGORIES.map(c => ({ key: c.key, label: c.label })),
+  ];
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <Header
-        title="Sign Dictionary"
-        subtitle={`${FSL_SIGNS.length} medical FSL signs`}
-        showBack
-        onBack={() => navigation.goBack()}
-      />
-
-      {/* Search */}
-      <View style={styles.searchRow}>
-        <Icon name="magnify" size={20} color={Colors.textSecondary} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search signs..."
-          placeholderTextColor={Colors.textMuted}
-          value={search}
-          onChangeText={setSearch}
-          returnKeyType="search"
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')}>
-            <Icon name="close-circle" size={18} color={Colors.textSecondary} />
-          </TouchableOpacity>
-        )}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Header */}
+      <View style={[
+        styles.header,
+        {
+          backgroundColor: colors.surface,
+          borderBottomColor: colors.border,
+          paddingTop: insets.top + 12,
+        },
+      ]}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary, fontSize: fs(20) }]}>
+          Sign Dictionary
+        </Text>
+        <Text style={[styles.headerSub, { color: colors.textSecondary, fontSize: fs(13) }]}>
+          {FSL_SIGNS.length} medical FSL signs
+        </Text>
       </View>
 
-      {/* Category Filter */}
-      <FlatList
-        data={[{ key: 'all', label: 'All', color: Colors.primary }, ...SIGN_CATEGORIES.map(c => ({ key: c.key, label: c.label, color: c.color }))]}
-        keyExtractor={item => item.key}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryList}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[
-              styles.categoryChip,
-              activeCategory === item.key && { backgroundColor: item.color + '30', borderColor: item.color },
-            ]}
-            onPress={() => setActiveCategory(item.key as SignCategory | 'all')}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.categoryChipText,
-                activeCategory === item.key && { color: item.color },
-              ]}
-            >
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
+      {/* Search */}
+      <View style={[
+        styles.searchWrap,
+        { backgroundColor: colors.surface, borderBottomColor: colors.border },
+      ]}>
+        <View style={[
+          styles.searchBox,
+          { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
+        ]}>
+          <Icon name="magnify" size={18} color={colors.textMuted} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.textPrimary, fontSize: fs(14) }]}
+            placeholder="Search signs..."
+            placeholderTextColor={colors.textMuted}
+            value={search}
+            onChangeText={setSearch}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Icon name="close-circle" size={16} color={colors.textMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Category Filter — ScrollView instead of FlatList to avoid stale render */}
+      <View style={[styles.filterContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterList}
+        >
+          {categories.map(item => {
+            const isActive = activeCategory === item.key;
+            const color = item.key === 'all'
+              ? colors.primary
+              : catColor(item.key);
+            return (
+              <TouchableOpacity
+                key={item.key}
+                style={[
+                  styles.filterChip,
+                  {
+                    backgroundColor: isActive ? color : colors.surfaceElevated,
+                    borderColor: isActive ? color : colors.border,
+                  },
+                ]}
+                onPress={() => setActiveCategory(item.key as SignCategory | 'all')}
+                activeOpacity={0.75}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    {
+                      color: isActive ? '#FFFFFF' : colors.textSecondary,
+                      fontSize: fs(12),
+                    },
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {/* Signs List */}
       <FlatList
-        data={filteredSigns}
-        keyExtractor={item => item.id}
+        data={filtered}
+        keyExtractor={i => i.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <SignCard sign={item} onPress={setSelectedSign} />
-        )}
+        renderItem={({ item }) => {
+          const color = catColor(item.category);
+          return (
+            <TouchableOpacity
+              style={[
+                styles.signCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+              onPress={() => setSelectedSign(item)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.signEmoji, { backgroundColor: color + '12' }]}>
+                <Text style={{ fontSize: 22 }}>{item.emoji}</Text>
+              </View>
+              <View style={styles.signInfo}>
+                <Text style={[styles.signLabel, { color: colors.textPrimary, fontSize: fs(15) }]}>
+                  {item.label}
+                </Text>
+                <Text style={[styles.signFil, { color: colors.textSecondary, fontSize: fs(13) }]}>
+                  {item.labelFil}
+                </Text>
+              </View>
+              <View style={[styles.catDot, { backgroundColor: color }]} />
+            </TouchableOpacity>
+          );
+        }}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Icon name="sign-text" size={48} color={Colors.textMuted} />
-            <Text style={styles.emptyText}>No signs found</Text>
+            <Icon name="magnify-remove-outline" size={40} color={colors.textMuted} />
+            <Text style={[styles.emptyText, { color: colors.textSecondary, fontSize: fs(14) }]}>
+              No signs found
+            </Text>
           </View>
         }
       />
@@ -110,29 +182,46 @@ export const DictionaryScreen: React.FC<Props> = ({ navigation }) => {
       {/* Sign Detail Modal */}
       <Modal
         visible={!!selectedSign}
-        animationType="slide"
         transparent
+        animationType="slide"
         onRequestClose={() => setSelectedSign(null)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHandle} />
+          <View style={[styles.modalSheet, { backgroundColor: colors.surface }]}>
+            <View style={[styles.modalHandle, { backgroundColor: colors.border }]} />
             {selectedSign && (
               <>
                 <Text style={styles.modalEmoji}>{selectedSign.emoji}</Text>
-                <Text style={styles.modalLabel}>{selectedSign.label}</Text>
-                <Text style={styles.modalLabelFil}>{selectedSign.labelFil}</Text>
-                <Text style={styles.modalDesc}>{selectedSign.description}</Text>
-                <View style={styles.modalCategoryTag}>
-                  <Text style={styles.modalCategoryText}>
+                <Text style={[styles.modalLabel, { color: colors.textPrimary, fontSize: fs(26) }]}>
+                  {selectedSign.label}
+                </Text>
+                <Text style={[styles.modalFil, { color: colors.primary, fontSize: fs(16) }]}>
+                  {selectedSign.labelFil}
+                </Text>
+                <Text style={[styles.modalDesc, { color: colors.textSecondary, fontSize: fs(13) }]}>
+                  {selectedSign.description}
+                </Text>
+                <View style={[
+                  styles.modalCat,
+                  { backgroundColor: catColor(selectedSign.category) + '15' },
+                ]}>
+                  <Text style={[
+                    styles.modalCatText,
+                    { color: catColor(selectedSign.category), fontSize: fs(12) },
+                  ]}>
                     {SIGN_CATEGORIES.find(c => c.key === selectedSign.category)?.label}
                   </Text>
                 </View>
                 <TouchableOpacity
-                  style={styles.modalClose}
+                  style={[
+                    styles.modalClose,
+                    { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
+                  ]}
                   onPress={() => setSelectedSign(null)}
                 >
-                  <Text style={styles.modalCloseText}>Close</Text>
+                  <Text style={[styles.modalCloseText, { color: colors.textPrimary, fontSize: fs(15) }]}>
+                    Close
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
@@ -144,49 +233,109 @@ export const DictionaryScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  searchRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    margin: 16, backgroundColor: Colors.card,
-    borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10,
-    borderWidth: 1, borderColor: Colors.border,
+  container: { flex: 1 },
+  header: {
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
   },
-  searchInput: { flex: 1, fontSize: 15, color: Colors.textPrimary, padding: 0 },
-  categoryList: { paddingHorizontal: 16, paddingBottom: 12, gap: 8 },
-  categoryChip: {
-    borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7,
-    backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
+  headerTitle: { fontWeight: '700', letterSpacing: -0.3 },
+  headerSub: { marginTop: 2 },
+  searchWrap: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
   },
-  categoryChipText: { fontSize: 13, fontWeight: '500', color: Colors.textSecondary },
-  list: { paddingHorizontal: 16, paddingBottom: 32 },
-  empty: { alignItems: 'center', paddingTop: 64, gap: 12 },
-  emptyText: { fontSize: 15, color: Colors.textSecondary },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderWidth: 1,
+  },
+  searchInput: { flex: 1, padding: 0 },
+  filterContainer: {
+    borderBottomWidth: 1,
+    height: 52,
+  },
+  filterList: {
+    paddingHorizontal: 16,
+    gap: 8,
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  filterChip: {
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderWidth: 1,
+  },
+  filterChipText: { fontWeight: '500' },
+  list: { padding: 16, gap: 10 },
+  signCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  signEmoji: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  signInfo: { flex: 1 },
+  signLabel: { fontWeight: '500' },
+  signFil: { marginTop: 2 },
+  catDot: { width: 8, height: 8, borderRadius: 4 },
+  empty: { alignItems: 'center', paddingTop: 60, gap: 12 },
+  emptyText: {},
   modalBackdrop: {
-    flex: 1, backgroundColor: '#00000090',
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: Colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 24, paddingTop: 12, alignItems: 'center', gap: 10,
-    borderTopWidth: 1, borderColor: Colors.border,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    paddingTop: 12,
+    alignItems: 'center',
+    gap: 10,
   },
   modalHandle: {
-    width: 40, height: 4, borderRadius: 2,
-    backgroundColor: Colors.textMuted, marginBottom: 12,
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    marginBottom: 8,
   },
-  modalEmoji: { fontSize: 56 },
-  modalLabel: { fontSize: 28, fontWeight: '700', color: Colors.textPrimary },
-  modalLabelFil: { fontSize: 18, color: Colors.primary },
-  modalDesc: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22 },
-  modalCategoryTag: {
-    backgroundColor: Colors.primary + '20', borderRadius: 20,
-    paddingHorizontal: 14, paddingVertical: 6,
+  modalEmoji: { fontSize: 52 },
+  modalLabel: { fontWeight: '700' },
+  modalFil: { fontWeight: '400' },
+  modalDesc: { textAlign: 'center', lineHeight: 20 },
+  modalCat: {
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
   },
-  modalCategoryText: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
+  modalCatText: {
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   modalClose: {
-    backgroundColor: Colors.surfaceElevated, borderRadius: 12,
-    paddingHorizontal: 32, paddingVertical: 14, marginTop: 8,
-    borderWidth: 1, borderColor: Colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 32,
+    paddingVertical: 13,
+    marginTop: 8,
+    borderWidth: 1,
+    width: '100%',
+    alignItems: 'center',
   },
-  modalCloseText: { fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
+  modalCloseText: { fontWeight: '500' },
 });

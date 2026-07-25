@@ -1,115 +1,119 @@
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Linking,
-  TouchableOpacity,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Colors } from '../constants/colors';
-import { Header } from '../components/Header';
+import { useTheme } from '../constants/theme';
 
-interface Props {
-  navigation: any;
-}
+interface Props { navigation: any; }
 
 export const AboutScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors, fs } = useTheme();
 
   const team = [
-    'Alca, Donnel Jan C.',
-    'Flores, Marc Vincent R.',
-    'Icalla, Charvie T.',
-    'Layo, Emmanuel James',
-    'Quinia, Vida Marie',
-    'Tamani, Ralph Nelson T.',
+    { name: 'Alca, Donnel Jan C.', initial: '' },
+    { name: 'Flores, Marc Vincent R.', initial: '' },
+    { name: 'Icalla, Charvie T.', initial: '' },
+    { name: 'Layo, Emmanuel James', initial: '' },
+    { name: 'Quinia, Vida Marie', initial: '' },
+    { name: 'Tamani, Ralph Nelson T.', initial: '' },
   ];
 
-  const techStack = [
-    { icon: 'react', label: 'React Native', sub: 'Frontend UI', color: '#61DAFB' },
-    { icon: 'language-kotlin', label: 'Kotlin', sub: 'Native Android modules', color: '#7F52FF' },
-    { icon: 'brain', label: 'TensorFlow Lite', sub: 'On-device AI inference', color: '#FF6F00' },
-    { icon: 'hand-wave', label: 'MediaPipe', sub: 'Landmark detection', color: Colors.success },
-    { icon: 'camera', label: 'Vision Camera', sub: 'Live video capture', color: Colors.primary },
-    { icon: 'volume-high', label: 'React Native TTS', sub: 'Text-to-Speech output', color: Colors.warning },
+  const infoRows = [
+    { label: 'Institution', value: 'Centro Escolar University – Makati' },
+    { label: 'Department', value: 'CS & Information Technology' },
+    { label: 'Adviser', value: 'Engr. Ma. Christina A. Florentino' },
+    { label: 'Platform', value: 'Android (API 24+)' },
+    { label: 'Legal Basis', value: 'Republic Act No. 11106' },
+    { label: 'Signs Covered', value: '60 Medical FSL Signs' },
   ];
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <Header title="About MotionSpeak" showBack onBack={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={styles.scroll}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[
+        styles.header,
+        { backgroundColor: colors.surface, borderBottomColor: colors.border, paddingTop: insets.top + 12 },
+      ]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Icon name="arrow-left" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary, fontSize: fs(18) }]}>
+          About
+        </Text>
+        <View style={{ width: 38 }} />
+      </View>
 
-        {/* Hero */}
-        <LinearGradient
-          colors={[Colors.primary + '20', Colors.background]}
-          style={styles.hero}
-        >
-          <Text style={styles.heroEmoji}>🤟</Text>
-          <Text style={styles.heroTitle}>MotionSpeak</Text>
-          <Text style={styles.heroSub}>Filipino Sign Language Interpreter</Text>
-          <View style={styles.heroBadge}>
-            <Text style={styles.heroBadgeText}>v1.0 · Healthcare Edition</Text>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      {/* App Identity */}
+        <View style={[styles.identityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.appIconBox, { backgroundColor: colors.primaryLight }]}>
+            <Image
+              source={require('../assets/hand_ms.png')}
+              style={styles.appIconImage}
+              resizeMode="contain"
+            />
           </View>
-        </LinearGradient>
-
-        {/* Description */}
-        <View style={styles.card}>
-          <Text style={styles.cardText}>
-            MotionSpeak is a camera-based Filipino Sign Language (FSL) recognition system
-            that employs Deep Learning to enhance inclusive communication by translating
-            hand gestures and facial expressions into real-time text and speech for Deaf or
-            hard-of-hearing individuals and non-signers in healthcare settings.
+          <Text style={[styles.appName, { color: colors.textPrimary, fontSize: fs(22) }]}>
+            MotionSpeak
+          </Text>
+          <Text style={[styles.appTagline, { color: colors.textSecondary, fontSize: fs(13) }]}>
+            Filipino Sign Language Interpreter
+          </Text>
+          <View style={[styles.versionBadge, { backgroundColor: colors.primaryLight }]}>
+            <Text style={[styles.versionText, { color: colors.primary, fontSize: fs(12) }]}>
+              v1.0 · Healthcare Edition
+            </Text>
+          </View>
+          <Text style={[styles.appDesc, { color: colors.textSecondary, fontSize: fs(13) }]}>
+            A camera-based FSL recognition system using deep learning to enhance inclusive communication between Deaf patients and healthcare professionals.
           </Text>
         </View>
 
         {/* Research Info */}
-        <Text style={styles.sectionTitle}>Research Information</Text>
-        <View style={styles.infoCard}>
-          {[
-            { label: 'Institution', value: 'Centro Escolar University – Makati' },
-            { label: 'Department', value: 'CS & Information Technology' },
-            { label: 'Adviser', value: 'Engr. Ma. Christina A. Florentino' },
-            { label: 'Signs Covered', value: '60 Medical FSL Signs' },
-            { label: 'Platform', value: 'Android (API 24+)' },
-            { label: 'Legal Basis', value: 'Republic Act No. 11106 (FSL Act)' },
-          ].map(item => (
-            <View key={item.label} style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{item.label}</Text>
-              <Text style={styles.infoValue}>{item.value}</Text>
-            </View>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary, fontSize: fs(12) }]}>
+          RESEARCH INFORMATION
+        </Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          {infoRows.map((row, i) => (
+            <React.Fragment key={row.label}>
+              <View style={styles.infoRow}>
+                <Text style={[styles.infoLabel, { color: colors.textSecondary, fontSize: fs(13) }]}>
+                  {row.label}
+                </Text>
+                <Text style={[styles.infoValue, { color: colors.textPrimary, fontSize: fs(13) }]}>
+                  {row.value}
+                </Text>
+              </View>
+              {i < infoRows.length - 1 && (
+                <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+              )}
+            </React.Fragment>
           ))}
         </View>
 
         {/* Team */}
-        <Text style={styles.sectionTitle}>Research Team</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary, fontSize: fs(12) }]}>
+          RESEARCH TEAM
+        </Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {team.map((member, i) => (
-            <View key={member} style={[styles.teamRow, i < team.length - 1 && styles.teamDivider]}>
-              <View style={styles.teamAvatar}>
-                <Text style={styles.teamInitial}>{member[0]}</Text>
+            <React.Fragment key={member.name}>
+              <View style={styles.teamRow}>
+                <View style={[styles.avatar, { backgroundColor: colors.primaryLight }]}>
+                  <Text style={[styles.avatarText, { color: colors.primary, fontSize: fs(15) }]}>
+                    {member.initial}
+                  </Text>
+                </View>
+                <Text style={[styles.memberName, { color: colors.textPrimary, fontSize: fs(14) }]}>
+                  {member.name}
+                </Text>
               </View>
-              <Text style={styles.teamName}>{member}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Tech Stack */}
-        <Text style={styles.sectionTitle}>Technology Stack</Text>
-        <View style={styles.card}>
-          {techStack.map((tech, i) => (
-            <View key={tech.label} style={[styles.techRow, i < techStack.length - 1 && styles.teamDivider]}>
-              <View style={[styles.techIcon, { backgroundColor: tech.color + '20' }]}>
-                <Icon name={tech.icon} size={18} color={tech.color} />
-              </View>
-              <View>
-                <Text style={styles.techLabel}>{tech.label}</Text>
-                <Text style={styles.techSub}>{tech.sub}</Text>
-              </View>
-            </View>
+              {i < team.length - 1 && (
+                <View style={[styles.divider, { backgroundColor: colors.divider, marginLeft: 58 }]} />
+              )}
+            </React.Fragment>
           ))}
         </View>
 
@@ -120,61 +124,56 @@ export const AboutScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  scroll: { padding: 16 },
-  hero: {
-    borderRadius: 16, padding: 28,
-    alignItems: 'center', gap: 8, marginBottom: 16,
-    borderWidth: 1, borderColor: Colors.primary + '30',
+  container: { flex: 1 },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1,
   },
-  heroEmoji: { fontSize: 52 },
-  heroTitle: { fontSize: 26, fontWeight: '800', color: Colors.textPrimary },
-  heroSub: { fontSize: 13, color: Colors.textSecondary },
-  heroBadge: {
-    backgroundColor: Colors.primary + '20', borderRadius: 20,
-    paddingHorizontal: 14, paddingVertical: 5,
-    borderWidth: 1, borderColor: Colors.primary + '40',
+  backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontWeight: '600' },
+  scroll: { padding: 16, gap: 8 },
+  identityCard: {
+    borderRadius: 14, borderWidth: 1,
+    padding: 24, alignItems: 'center', gap: 8, marginBottom: 8,
   },
-  heroBadgeText: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
-  card: {
-    backgroundColor: Colors.card, borderRadius: 14,
-    borderWidth: 1, borderColor: Colors.border, padding: 16,
-    marginBottom: 8,
+  appIconBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
-  cardText: { fontSize: 14, color: Colors.textSecondary, lineHeight: 22 },
+  appName: { fontWeight: '700', letterSpacing: -0.3 },
+  appTagline: {},
+  versionBadge: { borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5 },
+  versionText: { fontWeight: '600' },
+  appDesc: { textAlign: 'center', lineHeight: 20, marginTop: 4 },
   sectionTitle: {
-    fontSize: 11, fontWeight: '700', color: Colors.textSecondary,
-    textTransform: 'uppercase', letterSpacing: 1.2,
-    marginBottom: 8, marginTop: 16,
+    fontWeight: '600', textTransform: 'uppercase',
+    letterSpacing: 0.8, marginTop: 8, marginBottom: 4, marginLeft: 4,
   },
-  infoCard: {
-    backgroundColor: Colors.card, borderRadius: 14,
-    borderWidth: 1, borderColor: Colors.border, overflow: 'hidden', marginBottom: 8,
-  },
+  card: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
   infoRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    padding: 14, borderBottomWidth: 1, borderColor: Colors.border,
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', padding: 14, gap: 8,
   },
-  infoLabel: { fontSize: 13, color: Colors.textSecondary, flex: 1 },
-  infoValue: { fontSize: 13, color: Colors.textPrimary, fontWeight: '500', flex: 1.5, textAlign: 'right' },
-  teamRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10,
-  },
-  teamDivider: { borderBottomWidth: 1, borderColor: Colors.border },
-  teamAvatar: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: Colors.primary + '20',
+  infoLabel: {},
+  infoValue: { fontWeight: '500', textAlign: 'right', flex: 1 },
+  divider: { height: 1 },
+  teamRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12 },
+  avatar: {
+    width: 38, height: 38, borderRadius: 19,
     alignItems: 'center', justifyContent: 'center',
   },
-  teamInitial: { fontSize: 16, fontWeight: '700', color: Colors.primary },
-  teamName: { fontSize: 14, color: Colors.textPrimary, fontWeight: '500' },
-  techRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10,
+  avatarText: { fontWeight: '700' },
+  memberName: { fontWeight: '400' },
+  techRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12 },
+  techIcon: { width: 38, height: 38, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  techLabel: { fontWeight: '500' },
+  techSub: {},
+  appIconImage: {
+    width: 60,
+    height: 60,
   },
-  techIcon: {
-    width: 36, height: 36, borderRadius: 9,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  techLabel: { fontSize: 14, color: Colors.textPrimary, fontWeight: '500' },
-  techSub: { fontSize: 12, color: Colors.textSecondary, marginTop: 1 },
 });

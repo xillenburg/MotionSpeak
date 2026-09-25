@@ -40,10 +40,6 @@ cd MotionSpeak
 ```bash
 npm install
 ```
-##MotionSpeak File Prep
-
-
-##Access MotionSpeak On Android Studio
 
 ### 3. Bundle the JavaScript
 ```bash

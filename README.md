@@ -26,7 +26,7 @@ Install ff:
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-repo/MotionSpeak.git
+git clone https://github.com/xillenburg/FRONTEND_MotionSpeak
 cd MotionSpeak
 ```
 

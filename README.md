@@ -19,10 +19,15 @@ Install ff:
 3. Install **Android SDK Build-Tools 36**
 4. Install **Android Emulator** and **Platform-Tools**
 5. Create a virtual device: Virtual Device Manager → Pixel 7 → API 36
-
+_**(These steps are probably automatically done on the new version (Quail4).)**_
 ---
 
 ## Getting Started
+
+### 0. Download Git if not yet installed an git commands are not recognized to your PC
+```bash
+https://git-scm.com/install/windows
+```
 
 ### 1. Clone the repository
 ```bash
@@ -55,4 +60,3 @@ npm install; npx react-native bundle --platform android --dev false --entry-file
 
 ---
 
-## Project Structure

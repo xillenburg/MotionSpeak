@@ -19,10 +19,11 @@ Install ff:
 3. Install **Android SDK Build-Tools 36**
 4. Install **Android Emulator** and **Platform-Tools**
 5. Create a virtual device: Virtual Device Manager → Pixel 7 → API 36
+
 _**(These steps are probably automatically done on the new version (Quail4).)**_
 ---
 
-## Getting Started
+##MotionSpeak File Prep
 
 ### 0. Download Git if not yet installed an git commands are not recognized to your PC
 ```bash
@@ -39,6 +40,10 @@ cd MotionSpeak
 ```bash
 npm install
 ```
+##MotionSpeak File Prep
+
+
+##Access MotionSpeak On Android Studio
 
 ### 3. Bundle the JavaScript
 ```bash

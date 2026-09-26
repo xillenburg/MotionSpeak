@@ -16,6 +16,17 @@ interface AppState {
   setCurrentTranslation: (result: TranslationResult | null) => void;
   clearHistory: () => void;
 
+  // Sentence builder
+  sentence: string;
+  sentenceFil: string;
+  // LLM-processed versions — populated when AI converts raw words to proper sentence
+  processedSentence: string;
+  processedSentenceFil: string;
+  isLLMProcessed: boolean;
+  appendToSentence: (label: string, labelFil: string) => void;
+  clearSentence: () => void;
+  setProcessedSentence: (en: string, fil: string) => void;
+
   darkMode: boolean;
   setDarkMode: (val: boolean) => void;
   fontScale: number;
@@ -56,6 +67,36 @@ export const useAppStore = create<AppState>((set) => ({
     }
   },
   clearHistory: () => set({ translationHistory: [], currentTranslation: null }),
+
+  // Sentence builder
+  sentence: '',
+  sentenceFil: '',
+  processedSentence: '',
+  processedSentenceFil: '',
+  isLLMProcessed: false,
+  appendToSentence: (label, labelFil) =>
+    set((state) => ({
+      sentence: state.sentence ? state.sentence + ' ' + label : label,
+      sentenceFil: state.sentenceFil ? state.sentenceFil + ' ' + labelFil : labelFil,
+      // Reset LLM state when new word is added
+      isLLMProcessed: false,
+      processedSentence: '',
+      processedSentenceFil: '',
+    })),
+  clearSentence: () =>
+    set({
+      sentence: '',
+      sentenceFil: '',
+      processedSentence: '',
+      processedSentenceFil: '',
+      isLLMProcessed: false,
+    }),
+  setProcessedSentence: (en, fil) =>
+    set({
+      processedSentence: en,
+      processedSentenceFil: fil,
+      isLLMProcessed: true,
+    }),
 
   darkMode: false,
   setDarkMode: (val) => set({ darkMode: val }),

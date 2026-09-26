@@ -35,9 +35,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         },
       ]}>
         <View>
-          <Text style={[styles.headerGreeting, { color: colors.textSecondary, fontSize: fs(13) }]}>
-            Good day 👋
-          </Text>
           <Text style={[styles.headerTitle, { color: colors.textPrimary, fontSize: fs(22) }]}>
             MotionSpeak
           </Text>
@@ -209,7 +206,7 @@ const styles = StyleSheet.create({
   },
   scroll: { padding: 20, gap: 16 },
   heroCard: {
-    borderRadius: 16,
+    borderRadius: 6,
     padding: 24,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -229,14 +226,14 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 6,
   },
   heroBtnText: { color: '#fff', fontWeight: '600' },
   heroEmoji: { fontSize: 56, marginLeft: 16 },
   statsRow: { flexDirection: 'row', gap: 12 },
   statCard: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: 6,
     padding: 14,
     alignItems: 'center',
     gap: 4,
@@ -251,7 +248,7 @@ const styles = StyleSheet.create({
     marginBottom: -8,
   },
   actionsCard: {
-    borderRadius: 14,
+    borderRadius: 6,
     borderWidth: 1,
     overflow: 'hidden',
   },
@@ -262,7 +259,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   actionIcon: {
-    width: 40, height: 40, borderRadius: 10,
+    width: 40, height: 40, borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
   },
   actionText: { flex: 1, gap: 2 },

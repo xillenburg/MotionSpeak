@@ -23,11 +23,9 @@ export const AboutScreen: React.FC<Props> = ({ navigation }) => {
 
   const infoRows = [
     { label: 'Institution', value: 'Centro Escolar University – Makati' },
-    { label: 'Department', value: 'CS & Information Technology' },
-    { label: 'Adviser', value: 'Engr. Ma. Christina A. Florentino' },
+    { label: 'Department', value: 'Information Technology' },
     { label: 'Platform', value: 'Android (API 24+)' },
     { label: 'Legal Basis', value: 'Republic Act No. 11106' },
-    { label: 'Signs Covered', value: '60 Medical FSL Signs' },
   ];
 
   return (

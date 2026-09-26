@@ -7,11 +7,11 @@ import {
   Dimensions,
   Alert,
   StatusBar,
+  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { NativeCamera } from '../components/NativeCamera';
-import { TranslationOverlay } from '../components/TranslationOverlay';
 import { CameraFrame } from '../components/CameraFrame';
 import { useAppStore } from '../store/useAppStore';
 import { useTTS } from '../hooks/useTTS';
@@ -31,14 +31,18 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
   const {
     isCameraActive,
     setCameraActive,
-    currentTranslation,
-    isProcessing,
     ttsEnabled,
     setTtsEnabled,
     displayLanguage,
     showLandmarks,
     clearHistory,
-    setCurrentTranslation,
+    sentence,
+    sentenceFil,
+    processedSentence,
+    processedSentenceFil,
+    isLLMProcessed,
+    appendToSentence,
+    clearSentence,
   } = useAppStore();
 
   const { speak } = useTTS();
@@ -52,31 +56,64 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
     };
   }, []);
 
+  // What to display — LLM processed takes priority if available
+  const displayText = isLLMProcessed
+    ? (displayLanguage === 'fil' ? processedSentenceFil : processedSentence)
+    : (displayLanguage === 'fil' ? sentenceFil : sentence);
+
+  const hasText = displayText.trim().length > 0;
+
   const simulateDetection = () => {
     const mockSigns = [
-      { label: 'Pain', labelFil: 'Sakit', confidence: 0.94 },
-      { label: 'Fever', labelFil: 'Lagnat', confidence: 0.88 },
-      { label: 'Thank You', labelFil: 'Salamat Po', confidence: 0.97 },
-      { label: 'Headache', labelFil: 'Sakit ng Ulo', confidence: 0.91 },
+      { label: 'Hello', labelFil: 'Kamusta', confidence: 0.94 },
+      { label: 'Pain', labelFil: 'Sakit', confidence: 0.91 },
+      { label: 'Where', labelFil: 'Saan', confidence: 0.88 },
+      { label: 'Help', labelFil: 'Tulong', confidence: 0.97 },
+      { label: 'Fever', labelFil: 'Lagnat', confidence: 0.89 },
+      { label: 'Thank You', labelFil: 'Salamat Po', confidence: 0.95 },
     ];
     const random = mockSigns[Math.floor(Math.random() * mockSigns.length)];
-    setCurrentTranslation({ ...random, timestamp: Date.now() });
+    appendToSentence(random.label, random.labelFil);
     if (ttsEnabled) speak(random.label, random.labelFil);
   };
 
+  const handleSpeak = () => {
+    if (!hasText) return;
+    speak(
+      isLLMProcessed ? processedSentence : sentence,
+      isLLMProcessed ? processedSentenceFil : sentenceFil,
+    );
+  };
+
+  const handleClear = () => {
+    Alert.alert(
+      'Clear',
+      'Clear the current sentence?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clear', style: 'destructive', onPress: clearSentence },
+      ]
+    );
+  };
+
+  // Theme-aware button styles
   const btnBg = darkMode ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.92)';
   const btnBorder = darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
   const btnIconColor = darkMode ? '#FFFFFF' : '#0F172A';
-  const panelBg = darkMode ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.97)';
+  const panelBg = darkMode ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.98)';
   const panelBorder = darkMode ? 'rgba(255,255,255,0.08)' : colors.border;
   const handleColor = darkMode ? 'rgba(255,255,255,0.2)' : colors.border;
+
+  // Language label shown on panel
+  const languageLabel = displayLanguage === 'fil' ? '🇵🇭 Filipino' : '🇺🇸 English';
+  const languageLabelColor = displayLanguage === 'fil' ? '#10B981' : '#3B82F6';
 
   return (
     <View style={styles.container}>
       {/* Camera Feed */}
       <NativeCamera style={styles.cameraFull} facingFront={facingFront} />
 
-      {/* Dark mode overlays only */}
+      {/* Dark mode overlays */}
       {darkMode && (
         <>
           <View style={styles.topGradient} pointerEvents="none" />
@@ -88,7 +125,7 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
       {showLandmarks && (
         <CameraFrame
           isActive={isCameraActive}
-          isDetecting={isProcessing || !!currentTranslation}
+          isDetecting={hasText}
         />
       )}
 
@@ -115,14 +152,10 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
         <TouchableOpacity
           style={[styles.iconBtn, { backgroundColor: btnBg, borderColor: btnBorder }]}
           onPress={() =>
-            Alert.alert(
-              'Clear History',
-              'Remove all translation history?',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Clear', style: 'destructive', onPress: clearHistory },
-              ]
-            )
+            Alert.alert('Clear History', 'Remove all translation history?', [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Clear', style: 'destructive', onPress: clearHistory },
+            ])
           }
           activeOpacity={0.8}
         >
@@ -132,7 +165,6 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Side Controls */}
       <View style={[styles.sideControls, { top: height * 0.3 }]}>
-        {/* TTS toggle — mute/unmute */}
         <TouchableOpacity
           style={[
             styles.iconBtn,
@@ -151,7 +183,6 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
           />
         </TouchableOpacity>
 
-        {/* Camera flip */}
         <TouchableOpacity
           style={[styles.iconBtn, { backgroundColor: btnBg, borderColor: btnBorder }]}
           onPress={() => setFacingFront(prev => !prev)}
@@ -172,41 +203,113 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
       ]}>
         <View style={[styles.panelHandle, { backgroundColor: handleColor }]} />
 
-        <TranslationOverlay
-          result={currentTranslation}
-          isProcessing={isProcessing}
-          displayLanguage={displayLanguage}
-          onSpeakPress={() => {
-            if (currentTranslation) {
-              speak(currentTranslation.label, currentTranslation.labelFil);
-            }
-          }}
-          ttsEnabled={ttsEnabled}
-        />
+        {/* Language Indicator */}
+        <View style={styles.panelTopRow}>
+          <View style={[
+            styles.languageBadge,
+            { backgroundColor: languageLabelColor + '15', borderColor: languageLabelColor + '30' },
+          ]}>
+            <Text style={[styles.languageBadgeText, { color: languageLabelColor, fontSize: fs(11) }]}>
+              {languageLabel}
+            </Text>
+          </View>
 
-        <TouchableOpacity
-          style={[
-            styles.simulateBtn,
-            {
-              backgroundColor: colors.primaryLight,
-              borderColor: colors.primary + '35',
-            },
-          ]}
-          onPress={simulateDetection}
-          activeOpacity={0.8}
+          {/* LLM badge — shown when sentence has been processed */}
+          {isLLMProcessed && (
+            <View style={[
+              styles.languageBadge,
+              { backgroundColor: colors.primaryLight, borderColor: colors.primary + '30' },
+            ]}>
+              <Icon name="creation" size={11} color={colors.primary} />
+              <Text style={[styles.languageBadgeText, { color: colors.primary, fontSize: fs(11) }]}>
+                AI Processed
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Sentence Display Area */}
+        <ScrollView
+          style={styles.sentenceScroll}
+          contentContainerStyle={styles.sentenceScrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <Icon name="hand-wave-outline" size={16} color={colors.primary} />
-          <Text style={[styles.simulateBtnText, { color: colors.primary, fontSize: fs(13) }]}>
-            Simulate Detection
-          </Text>
-        </TouchableOpacity>
+          {hasText ? (
+            <Text style={[
+              styles.sentenceText,
+              { color: colors.textPrimary, fontSize: fs(24) },
+            ]}>
+              {displayText}
+            </Text>
+          ) : (
+            <View style={styles.emptyState}>
+              <Icon name="hand-wave-outline" size={28} color={colors.textMuted} />
+              <Text style={[styles.emptyStateText, { color: colors.textMuted, fontSize: fs(14) }]}>
+                Start signing
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Action Buttons */}
+        <View style={styles.panelActions}>
+          {hasText && ttsEnabled && (
+            <TouchableOpacity
+              style={[
+                styles.actionBtn,
+                { backgroundColor: colors.primaryLight, borderColor: colors.primary + '30' },
+              ]}
+              onPress={handleSpeak}
+              activeOpacity={0.8}
+            >
+              <Icon name="volume-high" size={15} color={colors.primary} />
+              <Text style={[styles.actionBtnText, { color: colors.primary, fontSize: fs(13) }]}>
+                Speak
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {hasText && (
+            <TouchableOpacity
+              style={[
+                styles.actionBtn,
+                { backgroundColor: colors.errorLight, borderColor: colors.error + '25' },
+              ]}
+              onPress={handleClear}
+              activeOpacity={0.8}
+            >
+              <Icon name="backspace-outline" size={15} color={colors.error} />
+              <Text style={[styles.actionBtnText, { color: colors.error, fontSize: fs(13) }]}>
+                Clear
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Simulate. Remove when AI is injected */}
+          <TouchableOpacity
+            style={[
+              styles.actionBtn,
+              { backgroundColor: colors.primaryLight, borderColor: colors.primary + '35' },
+            ]}
+            onPress={simulateDetection}
+            activeOpacity={0.8}
+          >
+            <Icon name="hand-wave-outline" size={15} color={colors.primary} />
+            <Text style={[styles.actionBtnText, { color: colors.primary, fontSize: fs(13) }]}>
+              Simulate
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
   cameraFull: {
     position: 'absolute',
     top: 0,
@@ -223,7 +326,7 @@ const styles = StyleSheet.create({
   bottomGradient: {
     position: 'absolute',
     bottom: 0, left: 0, right: 0,
-    height: 320,
+    height: 360,
     backgroundColor: 'rgba(0,0,0,0.45)',
   },
   topBar: {
@@ -247,13 +350,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    borderRadius: 20,
+    borderRadius: 2,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderWidth: 1,
   },
-  liveDot: { width: 6, height: 6, borderRadius: 3 },
-  liveText: { fontWeight: '600', letterSpacing: 1 },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  liveText: {
+    fontWeight: '600',
+    letterSpacing: 1,
+  },
   sideControls: {
     position: 'absolute',
     right: 16,
@@ -264,7 +374,7 @@ const styles = StyleSheet.create({
     bottom: 0, left: 0, right: 0,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 20,
+    paddingHorizontal: 20,
     paddingTop: 8,
     borderTopWidth: 1,
   },
@@ -273,17 +383,65 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     alignSelf: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  simulateBtn: {
+  panelTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 8,
-    marginTop: 12,
-    borderRadius: 10,
-    paddingVertical: 12,
+    marginBottom: 12,
+  },
+  languageBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+  },
+  languageBadgeText: {
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  sentenceScroll: {
+    maxHeight: 110,
+  },
+  sentenceScrollContent: {
+    paddingBottom: 4,
+  },
+  sentenceText: {
+    fontWeight: '600',
+    letterSpacing: -0.2,
+    lineHeight: 34,
+  },
+  emptyState: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 16,
+  },
+  emptyStateText: {
+    fontWeight: '400',
+  },
+  panelActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 14,
+    flexWrap: 'wrap',
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderWidth: 1,
   },
-  simulateBtnText: { fontWeight: '500' },
+  actionBtnText: {
+    fontWeight: '500',
+  },
 });

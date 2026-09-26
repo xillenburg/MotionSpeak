@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   filterChip: {
-    borderRadius: 20,
+    borderRadius: 6,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderWidth: 1,
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 14,
     padding: 14,
-    borderRadius: 12,
+    borderRadius: 6,
     borderWidth: 1,
   },
   signEmoji: {

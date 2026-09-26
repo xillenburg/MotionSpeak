@@ -104,7 +104,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingRow
             icon="weather-night"
-            iconColor="#8B5CF6"
+            iconColor="#326392"
             label="Dark Mode"
             sub={darkMode ? 'On — using dark theme' : 'Off — using light theme'}
             colors={colors} fs={fs}
@@ -112,7 +112,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               <Switch
                 value={darkMode}
                 onValueChange={setDarkMode}
-                trackColor={{ false: colors.border, true: '#8B5CF6' }}
+                trackColor={{ false: colors.border, true: '#442f50' }}
                 thumbColor="#fff"
               />
             }
@@ -164,8 +164,8 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         <SectionHeader title="TRANSLATION DISPLAY" colors={colors} fs={fs} />
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.row}>
-            <View style={[styles.rowIcon, { backgroundColor: '#10B98115' }]}>
-              <Icon name="translate" size={18} color="#10B981" />
+            <View style={[styles.rowIcon, { backgroundColor: '#36b59515' }]}>
+              <Icon name="translate" size={18} color="#36b595" />
             </View>
             <View style={styles.rowText}>
               <Text style={[styles.rowLabel, { color: colors.textPrimary, fontSize: fs(15) }]}>
@@ -185,10 +185,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                       styles.segment,
                       {
                         backgroundColor: displayLanguage === opt.key
-                          ? '#10B981'
+                          ? '#36b595'
                           : colors.surfaceElevated,
                         borderColor: displayLanguage === opt.key
-                          ? '#10B981'
+                          ? '#36b595'
                           : colors.border,
                       },
                     ]}
@@ -233,7 +233,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingRow
             icon="volume-high"
-            iconColor="#F59E0B"
+            iconColor="#a91fbc"
             label="Enable TTS"
             sub="Automatically speak recognized signs"
             colors={colors} fs={fs}
@@ -241,15 +241,15 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               <Switch
                 value={ttsEnabled}
                 onValueChange={setTtsEnabled}
-                trackColor={{ false: colors.border, true: '#F59E0B' }}
+                trackColor={{ false: colors.border, true: '#a91fbc' }}
                 thumbColor="#fff"
               />
             }
           />
           <View style={[styles.divider, { backgroundColor: colors.divider, marginLeft: 60 }]} />
           <View style={styles.row}>
-            <View style={[styles.rowIcon, { backgroundColor: '#F59E0B15' }]}>
-              <Icon name="speedometer" size={18} color="#F59E0B" />
+            <View style={[styles.rowIcon, { backgroundColor: '#a91fbc15' }]}>
+              <Icon name="speedometer" size={18} color="#a91fbc" />
             </View>
             <View style={styles.rowText}>
               <Text style={[styles.rowLabel, { color: colors.textPrimary, fontSize: fs(15) }]}>
@@ -263,10 +263,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                       styles.segment,
                       {
                         backgroundColor: ttsSpeed === opt.value
-                          ? '#F59E0B'
+                          ? '#a91fbc'
                           : colors.surfaceElevated,
                         borderColor: ttsSpeed === opt.value
-                          ? '#F59E0B'
+                          ? '#a91fbc'
                           : colors.border,
                       },
                     ]}
@@ -289,8 +289,8 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           </View>
           <View style={[styles.divider, { backgroundColor: colors.divider, marginLeft: 60 }]} />
           <View style={styles.row}>
-            <View style={[styles.rowIcon, { backgroundColor: '#F59E0B15' }]}>
-              <Icon name="earth" size={18} color="#F59E0B" />
+            <View style={[styles.rowIcon, { backgroundColor: '#a91fbc15' }]}>
+              <Icon name="earth" size={18} color="#a91fbc" />
             </View>
             <View style={styles.rowText}>
               <Text style={[styles.rowLabel, { color: colors.textPrimary, fontSize: fs(15) }]}>
@@ -307,10 +307,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                       styles.segment,
                       {
                         backgroundColor: ttsLanguage === opt.key
-                          ? '#F59E0B'
+                          ? '#a91fbc'
                           : colors.surfaceElevated,
                         borderColor: ttsLanguage === opt.key
-                          ? '#F59E0B'
+                          ? '#a91fbc'
                           : colors.border,
                       },
                     ]}
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     marginLeft: 4,
   },
-  card: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
+  card: { borderRadius: 6, borderWidth: 1, overflow: 'hidden' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   rowIcon: {
     width: 38,
     height: 38,
-    borderRadius: 9,
+    borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
   divider: { height: 1 },
   segmentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   segment: {
-    borderRadius: 8,
+    borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     padding: 14,
-    borderRadius: 14,
+    borderRadius: 6,
     borderWidth: 1,
     marginTop: 8,
   },

@@ -1,4 +1,4 @@
-<img width="692" height="155" alt="image" src="https://github.com/user-attachments/assets/87ceb0e3-7e45-4eb2-9397-f870edc65514" /># MotionSpeak
+# MotionSpeak
 
 ---
 # FRONTEND

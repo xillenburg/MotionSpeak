@@ -23,7 +23,7 @@ Install ff:
 _**(These steps are probably automatically done on the new version (Quail4).)**_
 ---
 
-**##MotionSpeak File Prep**
+#MotionSpeak File Prep
 
 ### 0. Download Git if not yet installed and 'git' commands are not recognized on your PC
 ```bash
@@ -48,10 +48,10 @@ Remove-Item -Recurse -Force node_modules
 Remove-Item package-lock.json
 npm install
 ```
-**##Android Studio Phone Prep**
+#Android Studio Phone Prep
 ### 1. Click More Actions > Virtual Device Manager > [Select the device you created earlier (Pixel 7 in this case) by pressing "play" icon]
 
-**##Opening MotionSpeak on the Android Studio Phone Pixel 7 emulator**
+#Opening MotionSpeak on the Android Studio Phone Pixel 7 emulator
 ### 1. Enter this command and wait for the app to download.
 ```bash
 npx react-native run-android

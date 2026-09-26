@@ -1,4 +1,4 @@
-# MotionSpeak
+<img width="692" height="155" alt="image" src="https://github.com/user-attachments/assets/87ceb0e3-7e45-4eb2-9397-f870edc65514" /># MotionSpeak
 
 ---
 # FRONTEND
@@ -22,9 +22,10 @@ Install ff:
 2. Install **Android SDK Platform 36**
 3. Install **Android SDK Build-Tools 36**
 4. Install **Android Emulator** and **Platform-Tools**
-5. Create a virtual device: Virtual Device Manager > Pixel 7 > API 36
-
 _**(These steps are probably automatically done on the new version (Quail4).)**_
+6. Create a virtual device: More Actions > Virtual Device Manager > Press plus icon **"+"**> Pixel 7 > Next > API > API 36.0 > Select the one with the star > Finish
+<img width="692" height="155" alt="image" src="https://github.com/user-attachments/assets/aed58057-1d7b-42df-92a6-a8cb7eee9f1e" />
+
 ---
 
 ## MotionSpeak File Prep

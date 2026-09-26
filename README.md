@@ -25,7 +25,7 @@ _**(These steps are probably automatically done on the new version (Quail4).)**_
 
 ##MotionSpeak File Prep
 
-### 0. Download Git if not yet installed an git commands are not recognized to your PC
+### 0. Download Git if not yet installed and 'git' commands are not recognized on your PC
 ```bash
 https://git-scm.com/install/windows
 ```
@@ -41,23 +41,11 @@ cd MotionSpeak
 npm install
 ```
 
-### 3. Bundle the JavaScript
+### 3. Computers that previously used MotionSpeak repos might experience high/critical errors whereas fresh computers do not.
+### Use this to fix said errors
 ```bash
-npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android\app\src\main\assets\index.android.bundle --assets-dest android\app\src\main\res
+Remove-Item -Recurse -Force node_modules
+Remove-Item package-lock.json
+npm install
 ```
-
-### 4. Build and run
-```bash
-cd android
-.\gradlew clean
-cd ..
-npx react-native run-android --no-packager
-```
-
-### One-liner (run all steps at once)
-```bash
-npm install; npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android\app\src\main\assets\index.android.bundle --assets-dest android\app\src\main\res; cd android; .\gradlew clean; cd ..; npx react-native run-android --no-packager
-```
-
----
 

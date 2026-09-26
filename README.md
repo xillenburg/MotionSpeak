@@ -18,12 +18,12 @@ Install ff:
 2. Install **Android SDK Platform 36**
 3. Install **Android SDK Build-Tools 36**
 4. Install **Android Emulator** and **Platform-Tools**
-5. Create a virtual device: Virtual Device Manager → Pixel 7 → API 36
+5. Create a virtual device: Virtual Device Manager > Pixel 7 > API 36
 
 _**(These steps are probably automatically done on the new version (Quail4).)**_
 ---
 
-##MotionSpeak File Prep
+**##MotionSpeak File Prep**
 
 ### 0. Download Git if not yet installed and 'git' commands are not recognized on your PC
 ```bash
@@ -48,4 +48,19 @@ Remove-Item -Recurse -Force node_modules
 Remove-Item package-lock.json
 npm install
 ```
+**##Android Studio Phone Prep**
+### 1. Click More Actions > Virtual Device Manager > [Select the device you created earlier (Pixel 7 in this case) by pressing "play" icon]
 
+**##Opening MotionSpeak on the Android Studio Phone Pixel 7 emulator**
+### 1. Enter this command and wait for the app to download.
+```bash
+npx react-native run-android
+```
+### 2. Since this command automatically opens Metro Bundler, after downloading, the app should start with no problem. But IF the console starts with this:
+```bash
+PS C:\Users\user\Downloads\MotionSpeak> 
+```
+### means it ignored your React Native Metro console or it never started. Close the Metro console if it opened but got ignored. Then re-open/open it using this command on a NEW terminal separate from the terminal where "npx react-native run-android" is used:
+```bash
+npx react-native start
+```

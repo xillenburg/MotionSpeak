@@ -7,8 +7,7 @@ import { NativeModules } from 'react-native';
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
 
-  // Phase 1 verification test
-  useEffect(() => {
+/**  useEffect(() => {
     const runPhase1Test = async () => {
       try {
         console.log('[Phase 1] Calling MotionSpeakAIV2.probeBlendshapes...');
@@ -20,6 +19,30 @@ export default function App() {
     };
     runPhase1Test();
   }, []);
+*/
+
+//Phase 2 - live blendshape polling
+useEffect(() => {
+    let cancelled = false;
+    const tick = async() => {
+        if (cancelled) return;
+        try {
+            const r = await NativeModules.MotionSpeakAIV2.probeLiveFrame();
+            if (r.didDetect) {
+                console.log('[Phase 2] blenshapes:', JSON.stringify(r.blendshapes));
+                } else {
+                    console.log('[Phase 2] no face -', r.reason ?? 'not detected');
+                    }
+            } catch (e) {
+                console.warn('[Phase 2] probeLiveFrame failed:', e);
+                }
+        };
+    const id = setInterval(tick, 500);
+    return () => {
+        cancelled = true;
+        clearInterval(id);
+        };
+    }, []);
 
   return (
     <SafeAreaProvider>

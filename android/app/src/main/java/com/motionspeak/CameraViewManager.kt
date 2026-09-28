@@ -17,6 +17,11 @@ import com.facebook.react.uimanager.annotations.ReactProp
 
 class CameraView(context: Context) : FrameLayout(context) {
 
+    companion object {
+        @Volatile
+        var activeInstance: CameraView? = null
+    }
+
     private val textureView: TextureView = TextureView(context)
     private var cameraDevice: CameraDevice? = null
     private var captureSession: CameraCaptureSession? = null
@@ -33,10 +38,14 @@ class CameraView(context: Context) : FrameLayout(context) {
         textureView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(st: SurfaceTexture, w: Int, h: Int) {
                 surfaceReady = true
+                activeInstance = this@CameraView
                 openCamera()
             }
             override fun onSurfaceTextureSizeChanged(st: SurfaceTexture, w: Int, h: Int) {}
             override fun onSurfaceTextureDestroyed(st: SurfaceTexture): Boolean {
+                if (activeInstance === this@CameraView) {
+                    activeInstance = null
+                }
                 surfaceReady = false
                 closeCamera()
                 return true
@@ -50,6 +59,15 @@ class CameraView(context: Context) : FrameLayout(context) {
         facingFront = front
         closeCamera()
         if (surfaceReady) openCamera()
+    }
+
+    fun getCurrentFrame(): android.graphics.Bitmap? {
+        if (!surfaceReady || !textureView.isAvailable) return null
+        return try {
+            textureView.bitmap
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun startBackgroundThread() {

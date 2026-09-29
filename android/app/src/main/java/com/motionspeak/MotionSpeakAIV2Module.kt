@@ -31,6 +31,7 @@ class MotionSpeakAIV2Module(
     }
 
     private val faceHelper = FaceLandmarkerHelper(reactContext)
+    private val nmmDetector = NMMDetector()
 
     override fun getName(): String = "MotionSpeakAIV2"
 
@@ -104,9 +105,7 @@ class MotionSpeakAIV2Module(
             if (frame == null) {
                 val out = Arguments.createMap()
                 out.putBoolean("didDetect", false)
-                out.putInt("blendshapeCount", 0)
                 out.putString("reason", "no_frame")
-                Log.d(TAG, "[Live Frame] no camera frame available yet")
                 promise.resolve(out)
                 return
             }
@@ -115,9 +114,7 @@ class MotionSpeakAIV2Module(
             if (base64 == null) {
                 val out = Arguments.createMap()
                 out.putBoolean("didDetect", false)
-                out.putInt("blendshapeCount", 0)
                 out.putString("reason", "encode_failed")
-                Log.d(TAG, "[Live Frame] base64 encode failed")
                 promise.resolve(out)
                 return
             }
@@ -126,24 +123,45 @@ class MotionSpeakAIV2Module(
             val result = faceHelper.detect(decoded)
 
             val blendshapes = BlendshapeExtractor.extract(result)
-            val nmmSubset = BlendshapeExtractor.subset(blendshapes, BlendshapeExtractor.NMM_RELEVANT_KEYS)
+            val keyPoints = FaceLandmarkExtractor.extractKeyPoints(result)
 
             val out = Arguments.createMap()
             out.putBoolean("didDetect", blendshapes.isNotEmpty())
             out.putInt("blendshapeCount", blendshapes.size)
 
             if (blendshapes.isNotEmpty()) {
-                val map = Arguments.createMap()
-                for ((k, v) in nmmSubset) map.putDouble(k, v.toDouble())
-                out.putMap("blendshapes", map)
+                val bsMap = Arguments.createMap()
+                for ((k, v) in blendshapes) bsMap.putDouble(k, v.toDouble())
+                out.putMap("blendshapes", bsMap)
 
-                val browInner = nmmSubset["browInnerUp"] ?: 0f
-                val browDownL = nmmSubset["browDownLeft"] ?: 0f
-                val browDownR = nmmSubset["browDownRight"] ?: 0f
-                Log.d(TAG, "[Live Frame] detected. browInnerUp=%.3f browDownLeft=%.3f browDownRight=%.3f"
-                    .format(browInner, browDownL, browDownR))
+                val browInner = blendshapes["browInnerUp"] ?: 0f
+                val browDownL = blendshapes["browDownLeft"] ?: 0f
+                val browDownR = blendshapes["browDownRight"] ?: 0f
+                val browDownAvg = (browDownL + browDownR) / 2f
+
+                val yaw = if (keyPoints != null) FaceLandmarkExtractor.yawProxy(keyPoints) else 0f
+                out.putDouble("yawProxy", yaw.toDouble())
+
+                // Feed the NMM detector — it returns sticky flags
+                val flags = nmmDetector.update(browInner, browDownAvg, yaw)
+
+                // Put flags into the result map for JS
+                val nmmMap = Arguments.createMap()
+                nmmMap.putBoolean("brow_raise", flags.brow_raise)
+                nmmMap.putBoolean("brow_furrow", flags.brow_furrow)
+                nmmMap.putBoolean("head_shake", flags.head_shake)
+                out.putMap("nmm", nmmMap)
+
+                Log.d(
+                    TAG,
+                    "[Calib] inner=%.3f down=%.3f yaw=%+.3f  NMM: raise=%s furrow=%s shake=%s"
+                        .format(
+                            browInner, browDownAvg, yaw,
+                            flags.brow_raise, flags.brow_furrow, flags.head_shake
+                        )
+                )
             } else {
-                Log.d(TAG, "[Live Frame] no face detected in current frame")
+                Log.d(TAG, "[Live Frame] no face detected")
             }
 
             if (decoded !== frame) decoded.recycle()

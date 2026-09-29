@@ -19,9 +19,9 @@ export default function App() {
     };
     runPhase1Test();
   }, []);
-*/
 
-//Phase 2 - live blendshape polling
+
+Phase 2 - live blendshape polling
 useEffect(() => {
     let cancelled = false;
     const tick = async() => {
@@ -43,6 +43,57 @@ useEffect(() => {
         clearInterval(id);
         };
     }, []);
+
+  // Phase 3 — calibration logging
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      if (cancelled) return;
+      try {
+        const r = await NativeModules.MotionSpeakAIV2.probeLiveFrame();
+        if (r.didDetect) {
+          const bs = r.blendshapes ?? {};
+          const browInner = bs.browInnerUp ?? 0;
+          const browDownL = bs.browDownLeft ?? 0;
+          const browDownR = bs.browDownRight ?? 0;
+          const browDownAvg = (browDownL + browDownR) / 2;
+          const yaw = r.yawProxy ?? 0;
+          console.log(
+            `[Calib JS] inner=${browInner.toFixed(3)} downAvg=${browDownAvg.toFixed(3)} yaw=${yaw.toFixed(3)}`
+          );
+        }
+      } catch (e) {
+        console.warn('[Phase 3] probeLiveFrame failed:', e);
+      }
+    };
+    const id = setInterval(tick, 300);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+*/
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      if (cancelled) return;
+      try {
+        const r = await NativeModules.MotionSpeakAIV2.probeLiveFrame();
+        if (r.didDetect && r.nmm) {
+          console.log(
+            `[NMM] raise=${r.nmm.brow_raise} furrow=${r.nmm.brow_furrow} shake=${r.nmm.head_shake}`
+          );
+        }
+      } catch (e) {
+        console.warn('[Phase 3] probeLiveFrame failed:', e);
+      }
+    };
+    const id = setInterval(tick, 100);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
 
   return (
     <SafeAreaProvider>
